@@ -4,11 +4,14 @@ import CosmicBackground from "@/app-components/CosmicBackground.jsx";
 import Header from "@/app-components/Header.jsx";
 import Footer from "@/app-components/Footer.jsx";
 import { AuthContext } from "@/context/AuthContext.jsx";
-import { Mail, User, Calendar, LogOut } from "lucide-react";
+import { Mail, User, Calendar, ArrowLeft } from "lucide-react";
 import toast from "react-hot-toast";
+import { Link, useNavigate } from "react-router-dom";
 
 export default function Profile() {
-  const { user, logout } = useContext(AuthContext);
+  const { user } = useContext(AuthContext);
+  const navigate = useNavigate();
+
 
   if (!user)
     return (
@@ -84,19 +87,15 @@ export default function Profile() {
               </div>
             </div>
 
-            {/* ------------------- LOGOUT BUTTON ------------------- */}
             <motion.button
               whileTap={{ scale: 0.97 }}
               className="w-full mt-10 bg-gradient-to-r from-purple-500 to-purple-700 
-                         hover:from-purple-600 hover:to-purple-800 text-white py-3 rounded-lg 
-                         shadow-lg font-semibold flex items-center justify-center gap-2"
-              onClick={() => {
-                logout();
-                toast.success("Logged out successfully");
-              }}
+             hover:from-purple-600 hover:to-purple-800 text-white py-3 rounded-lg 
+             shadow-lg font-semibold flex items-center justify-center gap-2"
+              onClick={() => navigate("/")}
             >
-              <LogOut className="w-5 h-5" />
-              Logout
+              <ArrowLeft className="w-5 h-5" />
+              Go Back
             </motion.button>
           </motion.div>
         </main>

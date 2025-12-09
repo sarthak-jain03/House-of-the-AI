@@ -16,8 +16,8 @@ export default function VerifyOtp() {
   const [loading, setLoading] = useState(false);
   const [resendLoading, setResendLoading] = useState(false);
   const [timer, setTimer] = useState(30);
-  const [otpError, setOtpError] = useState("");   // ⭐ NEW STATE
-  const [shake, setShake] = useState(false);      // ⭐ For shake animation
+  const [otpError, setOtpError] = useState("");   
+  const [shake, setShake] = useState(false);      
 
   const tempId = localStorage.getItem("tempId");
 
@@ -34,7 +34,7 @@ export default function VerifyOtp() {
     if (!otp) return toast.error("Please enter the OTP");
 
     setLoading(true);
-    setOtpError(""); // reset error
+    setOtpError(""); 
 
     const res = await verifyOtp({ tempId, otp });
 
@@ -43,10 +43,10 @@ export default function VerifyOtp() {
       localStorage.removeItem("tempId");
       navigate("/");
     } else {
-      // ⭐ Show Wrong OTP message
+     
       setOtpError("Wrong OTP. Please try again.");
 
-      // ⭐ Shake input field
+      
       setShake(true);
       setTimeout(() => setShake(false), 600);
 
@@ -65,7 +65,7 @@ export default function VerifyOtp() {
     if (res.success) {
       toast.success("OTP resent to your email!");
       setTimer(30);
-      setOtpError(""); // reset any previous errors
+      setOtpError(""); 
     } else {
       toast.error(res.message);
     }
@@ -98,7 +98,7 @@ export default function VerifyOtp() {
               <div>
                 <label className="text-gray-300 text-sm">OTP Code</label>
 
-                {/* ⭐ SHAKE ANIMATION WRAPPER */}
+                
                 <motion.div
                   animate={shake ? { x: [-10, 10, -8, 8, -5, 5, 0] } : {}}
                   transition={{ duration: 0.4 }}
@@ -113,14 +113,14 @@ export default function VerifyOtp() {
                     className="bg-transparent outline-none text-white w-full text-lg tracking-widest"
                     value={otp}
                     onChange={(e) => {
-                      setOtpError(""); // remove error when typing
+                      setOtpError("");
                       setOtp(e.target.value);
                     }}
                     required
                   />
                 </motion.div>
 
-                {/* ⭐ INLINE "Wrong OTP" MESSAGE */}
+               
                 {otpError && (
                   <p className="text-red-400 bg-red-400/10 border border-red-400/20 
                                 text-sm p-2 rounded-lg mt-2">

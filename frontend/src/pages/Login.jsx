@@ -7,6 +7,7 @@ import GoogleLoginButton from "@/app-components/GoogleLoginButton.jsx";
 import { AuthContext } from "@/context/AuthContext.jsx";
 import { Link, useNavigate } from "react-router-dom";
 import { Lock, Mail, LogIn } from "lucide-react";
+import toast from "react-hot-toast";
 
 
 export default function Login() {
@@ -21,8 +22,10 @@ export default function Login() {
     setError("");
     const res = await login(form);
     if (res.success) {
+      toast.success("Entered the House successfully.");
       navigate("/");
     } else {
+      toast.error(res.message || "Entry Denied!");
       setError(res.message);
     }
   };
@@ -116,9 +119,11 @@ return (
           <div className="flex justify-center">
             <GoogleLoginButton
               onSuccess={(user) => {
+                toast.success("Entered successfully through Google.");
                 setUser(user);
                 navigate("/");
               }}
+              onError={() => toast.error("Google Entry Denied!")}
             />
           </div>
 

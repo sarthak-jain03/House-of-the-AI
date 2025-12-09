@@ -1,5 +1,6 @@
 import { createContext, useEffect, useState } from "react";
 import API from "@/api/axios";
+import toast from "react-hot-toast";
 
 export const AuthContext = createContext();
 
@@ -8,7 +9,7 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  // --------------------- LOAD CURRENT USER ---------------------
+ 
   const loadUser = async () => {
     setLoading(true);
     setError("");
@@ -42,7 +43,7 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // --------------------- SIGNUP (OTP STEP 1) ---------------------
+  
   const signup = async (formData) => {
     setLoading(true);
     setError("");
@@ -65,7 +66,7 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // --------------------- VERIFY OTP (STEP 2) ---------------------
+  
   const verifyOtp = async ({ tempId, otp }) => {
     setLoading(true);
     setError("");
@@ -77,7 +78,7 @@ export const AuthProvider = ({ children }) => {
         { withCredentials: true }
       );
 
-      setUser(res.data.user); // auto-login after OTP
+      setUser(res.data.user); 
 
       return { success: true };
     } catch (err) {
@@ -89,7 +90,7 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // --------------------- RESEND OTP ---------------------
+  
   const resendOtp = async (tempId) => {
     try {
       const res = await API.post("/auth/resend-otp", { tempId });
@@ -100,13 +101,15 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // --------------------- LOGOUT ---------------------
+ 
   const logout = async () => {
     try {
       await API.post("/auth/logout", {}, { withCredentials: true });
       setUser(null);
+      toast.success("Logged out successfully.")
     } catch (err) {
       console.error("Logout failed:", err);
+      toast.error(err);
     }
   };
 

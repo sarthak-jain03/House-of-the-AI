@@ -15,12 +15,17 @@ export default function Signup() {
 
   const [form, setForm] = useState({ name: "", email: "", password: "" });
   const [error, setError] = useState("");
-  const [loadingOTP, setLoadingOTP] = useState(false); // 🔥 New Loader State
+  const [loadingOTP, setLoadingOTP] = useState(false); 
 
   const handleSignup = async (e) => {
     e.preventDefault();
     setError("");
-    setLoadingOTP(true); // Start loader
+
+    if (!form.name || !form.email || !form.password) {
+      toast.error("Please complete all fields");
+      return;
+    }
+    setLoadingOTP(true); 
 
     try {
       const res = await API.post("/auth/signup", form, { withCredentials: true });
@@ -37,7 +42,7 @@ export default function Signup() {
       setError(msg);
       toast.error(msg);
     } finally {
-      setLoadingOTP(false); // Stop loader
+      setLoadingOTP(false); 
     }
   };
 
@@ -158,9 +163,10 @@ export default function Signup() {
           <div className="flex justify-center">
             <GoogleLoginButton
               onSuccess={(user) => {
-                toast.success("Welcome!");
+                toast.success("Welcome to the House.!");
                 navigate("/");
               }}
+              onError={() => toast.error("Google Entry Denied!")}
             />
           </div>
 
