@@ -24,8 +24,8 @@ load_dotenv()
 
 
 app = Flask(__name__)
-FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:5173")
-CORS(app, origins=[FRONTEND_URL, "http://localhost:5173"], supports_credentials=True)
+CORS(app, origins=["*"], supports_credentials=True)
+
 
 FIREWORKS_API_KEY = os.getenv("FIREWORKS_API_KEY")
 FIREWORKS_URL = os.getenv("FIREWORKS_URL")
@@ -649,12 +649,13 @@ def story_weaver():
 #     print("Server running at http://127.0.0.1:5000")
 #     app.run(debug=True)
 
-@app.route("/ping", methods=["GET"])
+@app.route("/ping")
 def ping():
-    return jsonify({"status": "ok", "time": datetime.now(timezone.utc).isoformat()})
+    return {"status": "ok"}
+
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
-    print(f"Starting server on 0.0.0.0:{port}")
-    # Note: do NOT run debug=True in deployed env
+    print(f"Running on port {port}")
     app.run(host="0.0.0.0", port=port)
+
