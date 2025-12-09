@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { Feather } from "lucide-react";
-import ChatMessage from "../Componentss/ChatMessage";
+import ChatMessage from "../app-components/ChatMessage";
 
 // const API_URL = "http://localhost:8080/api/chats/history/poet";
 const API_URL = `${import.meta.env.VITE_BACKEND_URL}/api/chats/history/poet`;

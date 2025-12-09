@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import CosmicBackground from '../Componentss/CosmicBackground';
-import Header from '../Componentss/Header';
-import Footer from '../Componentss/Footer';
+import CosmicBackground from '../app-components/CosmicBackground';
+import Header from '../app-components/Header';
+import Footer from '../app-components/Footer';
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";

@@ -1,9 +1,9 @@
 import React, { useContext, useState } from "react";
 import { motion } from "framer-motion";
-import CosmicBackground from "../Componentss/CosmicBackground";
-import Header from "../Componentss/Header";
-import Footer from "../Componentss/Footer";
-import GoogleLoginButton from "../Componentss/GoogleLoginButton";
+import CosmicBackground from "../app-components/CosmicBackground";
+import Header from "../app-components/Header";
+import Footer from "../app-components/Footer";
+import GoogleLoginButton from "../app-components/GoogleLoginButton";
 import { AuthContext } from "../context/AuthContext";
 import { Link, useNavigate } from "react-router-dom";
 import { Mail, Lock, User, LogIn } from "lucide-react";

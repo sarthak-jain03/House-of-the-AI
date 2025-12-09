@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import MyTalksSideBar from '../Componentss/MyTalksSideBar';
+import MyTalksSideBar from '../app-components/MyTalksSideBar';
 import PoetTalkRoom from '../talks/PoetTalkRoom';
 import CodeWhispererTalkRoom from '../talks/CodeWhispererTalkRoom';
 import DataSageTalkRoom from '../talks/DataSageTalkRoom';

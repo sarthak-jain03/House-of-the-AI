@@ -1,8 +1,8 @@
 import React, { useEffect, useState, useRef } from "react";
 import { motion } from "framer-motion";
 import { Code2 } from "lucide-react";
-import CodeWhispererMessage from "../Componentss/CodeWhispererMessage";
-import ChatMessage from "../Componentss/ChatMessage";
+import CodeWhispererMessage from "../app-components/CodeWhispererMessage";
+import ChatMessage from "../app-components/ChatMessage";
 
 const API_URL = `${import.meta.env.VITE_BACKEND_URL}/api/chats/history/coder`;
 // const API_URL = "http://localhost:8080/api/chats/history/coder";

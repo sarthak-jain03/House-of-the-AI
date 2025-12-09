@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import AISidebar from '../Componentss/AISidebar';
+import AISidebar from '../app-components/AISidebar';
 import PoetRoom from '../rooms/PoetRoom';
 import CodeWhispererRoom from '../rooms/CodeWhispererRoom';
 import DataSageRoom from '../rooms/DataSageRoom';

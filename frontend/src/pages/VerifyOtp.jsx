@@ -1,8 +1,8 @@
 import React, { useState, useContext, useEffect } from "react";
 import { motion } from "framer-motion";
-import CosmicBackground from "../Componentss/CosmicBackground";
-import Header from "../Componentss/Header";
-import Footer from "../Componentss/Footer";
+import CosmicBackground from "../app-components/CosmicBackground";
+import Header from "../app-components/Header";
+import Footer from "../app-components/Footer";
 import { AuthContext } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { ShieldCheck, RefreshCcw } from "lucide-react";

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { Code2, Sparkles, Eye, MessageSquare, TestTube, Bug, RefreshCw, Download, Send } from 'lucide-react';
-import CodeWhispererMessage from '../Componentss/CodeWhispererMessage';
+import CodeWhispererMessage from '../app-components/CodeWhispererMessage';
 
 
 const API_URL = `${import.meta.env.VITE_INFERENCE_API_URL}/code_chat`;

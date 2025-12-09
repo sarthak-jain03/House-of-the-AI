@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Stethoscope, AlertTriangle, MessageSquare, Check } from 'lucide-react';
-import ChatMessage from '../Componentss/ChatMessage';
-import ChatInput from '../Componentss/ChatInput';
+import ChatMessage from '../app-components/ChatMessage';
+import ChatInput from '../app-components/ChatInput';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Checkbox } from '@/components/ui/checkbox';
 

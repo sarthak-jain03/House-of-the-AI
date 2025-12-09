@@ -9,8 +9,8 @@ import {
   X,
   Search
 } from 'lucide-react';
-import DataSageMessage from '../Componentss/DataSageMessage';
-import DataSageChatInput from '../Componentss/DataSageChatInput';
+import DataSageMessage from '../app-components/DataSageMessage';
+import DataSageChatInput from '../app-components/DataSageChatInput';
 
 const API_BASE_URL = `${import.meta.env.VITE_INFERENCE_API_URL}`;
 const SAVE_CHAT_URL = `${import.meta.env.VITE_BACKEND_URL || 'http://localhost:8080'}/api/chats/save`;
