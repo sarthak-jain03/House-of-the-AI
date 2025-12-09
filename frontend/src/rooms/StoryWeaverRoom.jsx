@@ -124,7 +124,6 @@ export default function StoryWeaverRoom() {
 
         <div className="flex items-center gap-3 mt-4">
           <button
-            onClick={handleExploreAIs}
             className="px-5 py-2 bg-gradient-to-r from-orange-500 to-orange-600 
             text-white rounded-full text-sm font-medium"
           >
