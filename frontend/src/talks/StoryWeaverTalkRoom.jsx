@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { BookOpen } from "lucide-react";
-import StoryWeaverMessage from "../app-components/StoryWeaverMessage";
+import StoryWeaverMessage from "../app-components/StoryWeaverMessage.jsx";
 
 // const API_URL = "http://localhost:8080/api/chats/history/story";
 const API_URL = `${import.meta.env.VITE_BACKEND_URL}/api/chats/history/story`;

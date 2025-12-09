@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { Feather, Sparkles } from "lucide-react";
-import ChatMessage from "../app-components/ChatMessage";
-import ChatInput from "../app-components/ChatInput";
+import ChatMessage from "../app-components/ChatMessage.jsx";
+import ChatInput from "../app-components/ChatInput.jsx";
 
 const PYTHON_API = `${import.meta.env.VITE_INFERENCE_API_URL}/poet_chat`;
 // const PYTHON_API = "http://127.0.0.1:5000/poet_chat";

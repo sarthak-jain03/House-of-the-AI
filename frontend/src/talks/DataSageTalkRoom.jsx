@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { BarChart3 } from "lucide-react";
-import DataSageMessage from "../app-components/DataSageMessage";
+import DataSageMessage from "../app-components/DataSageMessage.jsx";
 
 // const API_URL = "http://localhost:8080/api/chats/history/datasage";
 const API_URL = `${import.meta.env.VITE_BACKEND_URL}/api/chats/history/datasage`;

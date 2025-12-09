@@ -1,11 +1,11 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import CosmicBackground from '../app-components/CosmicBackground';
-import Header from '../app-components/Header';
-import Footer from '../app-components/Footer';
-import AICard from '../app-components/AICard';
-import HowItWorks from '../app-components/HowItWorks';
+import CosmicBackground from '../app-components/CosmicBackground.jsx';
+import Header from '../app-components/Header.jsx';
+import Footer from '../app-components/Footer.jsx';
+import AICard from '../app-components/AICard.jsx';
+import HowItWorks from '../app-components/HowItWorks.jsx';
 
 const aiAssistants = [
   { type: 'poet', title: 'The Poet', description: 'Crafts imaginative stories and verses.' },

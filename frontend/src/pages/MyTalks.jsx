@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import MyTalksSideBar from '../app-components/MyTalksSideBar';
-import PoetTalkRoom from '../talks/PoetTalkRoom';
-import CodeWhispererTalkRoom from '../talks/CodeWhispererTalkRoom';
-import DataSageTalkRoom from '../talks/DataSageTalkRoom';
-import StoryWeaverTalkRoom from '../talks/StoryWeaverTalkRoom';
-import DoctorRoom from '../rooms/DoctorRoom';
+import MyTalksSideBar from '../app-components/MyTalksSideBar.jsx';
+import PoetTalkRoom from '../talks/PoetTalkRoom.jsx';
+import CodeWhispererTalkRoom from '../talks/CodeWhispererTalkRoom.jsx';
+import DataSageTalkRoom from '../talks/DataSageTalkRoom.jsx';
+import StoryWeaverTalkRoom from '../talks/StoryWeaverTalkRoom.jsx';
+import DoctorRoom from '../rooms/DoctorRoom.jsx';
 
 const roomComponents = {
   poet: PoetTalkRoom,
