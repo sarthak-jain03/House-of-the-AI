@@ -5,5 +5,5 @@ numpy
 matplotlib
 seaborn
 fpdf
+python-dotenv
 requests
-dotenv
