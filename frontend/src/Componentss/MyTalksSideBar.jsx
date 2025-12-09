@@ -4,7 +4,7 @@ import {
   Home, ChevronDown, Code2, Feather, BarChart3, BookOpen, 
   LogOut, MessageSquare 
 } from 'lucide-react';
-import { AuthContext } from '../context/authContext';
+import { AuthContext } from '../context/AuthContext';
 
 const aiList = [
   { type: 'code_whisperer', title: 'The Code Whisperer', description: 'Assists in writing and reviewing code', icon: Code2, color: 'text-teal-400' },
