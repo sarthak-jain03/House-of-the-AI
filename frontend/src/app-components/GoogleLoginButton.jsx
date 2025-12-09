@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 import { jwtDecode } from "jwt-decode"; 
-import API from "../api/axios";
+import API from "@/api/axios";
 
 const GoogleLoginButton = ({ onSuccess }) => {
   const googleBtn = useRef(null);
