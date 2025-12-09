@@ -1,8 +1,8 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import CosmicBackground from '../app-components/CosmicBackground.jsx';
-import Header from '../app-components/Header.jsx';
-import Footer from '../app-components/Footer.jsx';
+import CosmicBackground from '@/app-components/CosmicBackground.jsx';
+import Header from '@/app-components/Header.jsx';
+import Footer from '@/app-components/Footer.jsx';
 import { Brain, Sparkles, Shield, Zap, Code2, Rocket, User } from 'lucide-react';
 
 const features = [

@@ -6,7 +6,7 @@ import {
   MessageCircleMore,
   Info
 } from 'lucide-react';
-import { AuthContext } from '../context/AuthContext.jsx';
+import { AuthContext } from '@/context/AuthContext.jsx';
 
 const aiList = [
   { type: 'code_whisperer', title: 'The Code Whisperer', description: 'Assists in writing and reviewing code', icon: Code2, color: 'text-teal-400' },

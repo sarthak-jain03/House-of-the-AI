@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import CosmicBackground from '../app-components/CosmicBackground.jsx';
-import Header from '../app-components/Header.jsx';
-import Footer from '../app-components/Footer.jsx';
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Button } from "@/components/ui/button";
+import CosmicBackground from '@/app-components/CosmicBackground.jsx';
+import Header from '@/app-components/Header.jsx';
+import Footer from '@/app-components/Footer.jsx';
+import { Input } from "@/components/ui/input.jsx";
+import { Textarea } from "@/components/ui/textarea.jsx";
+import { Button } from "@/components/ui/button.jsx";
 import { Mail, MessageSquare, Send, Check, PhoneCall } from 'lucide-react';
 
 export default function Contact() {

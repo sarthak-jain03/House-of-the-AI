@@ -2,23 +2,23 @@ import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import "./App.css";
 
-import CodeWhispererRoom from "./rooms/CodeWhispererRoom.jsx";
-import DoctorRoom from "./rooms/DoctorRoom.jsx";
-import DataSageRoom from "./rooms/DataSageRoom.jsx";
-import PoetRoom from "./rooms/PoetRoom.jsx";
-import StoryWeaverRoom from "./rooms/StoryWeaverRoom.jsx";
+import CodeWhispererRoom from "@/rooms/CodeWhispererRoom.jsx";
+import DoctorRoom from "@/rooms/DoctorRoom";
+import DataSageRoom from "@/rooms/DataSageRoom";
+import PoetRoom from "@/rooms/PoetRoom.jsx";
+import StoryWeaverRoom from "@/rooms/StoryWeaverRoom.jsx";
 
-import Home from "./pages/Home.jsx";
-import AIRoom from "./pages/AIRoom.jsx";
-import About from "./pages/About.jsx";
-import Contact from "./pages/Contact.jsx";
-import Login from "./pages/Login.jsx";
-import Signup from "./pages/Signup.jsx";
-import VerifyOtp from "./pages/VerifyOtp.jsx";
+import Home from "@/pages/Home.jsx";
+import AIRoom from "@/pages/AIRoom.jsx";
+import About from "@/pages/About.jsx";
+import Contact from "@/pages/Contact.jsx";
+import Login from "@/pages/Login.jsx";
+import Signup from "@/pages/Signup.jsx";
+import VerifyOtp from "@/pages/VerifyOtp.jsx";
 
-import MyTalks from "./pages/MyTalks.jsx";
+import MyTalks from "@/pages/MyTalks.jsx";
 
-import Profile from "./pages/Profile.jsx";
+import Profile from "@/pages/Profile.jsx";
 
 function App() {
   return (

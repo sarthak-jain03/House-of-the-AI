@@ -7,7 +7,7 @@ import {
   UserRoundPen, 
   MessageCircleMore 
 } from "lucide-react";
-import { AuthContext } from "../context/AuthContext.jsx";
+import { AuthContext } from "@/context/AuthContext.jsx";
 
 export default function Header() {
   const { user, logout } = useContext(AuthContext);

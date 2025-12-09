@@ -1,9 +1,9 @@
 import React, { useContext } from "react";
 import { motion } from "framer-motion";
-import CosmicBackground from "../app-components/CosmicBackground.jsx";
-import Header from "../app-components/Header.jsx";
-import Footer from "../app-components/Footer.jsx";
-import { AuthContext } from "../context/AuthContext.jsx";
+import CosmicBackground from "@/app-components/CosmicBackground.jsx";
+import Header from "@/app-components/Header.jsx";
+import Footer from "@/app-components/Footer.jsx";
+import { AuthContext } from "@/context/AuthContext.jsx";
 import { Mail, User, Calendar, LogOut } from "lucide-react";
 import toast from "react-hot-toast";
 

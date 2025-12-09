@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { BookOpen, Sparkles, Film, Scroll, Users, GitBranch } from "lucide-react";
-import StoryWeaverChatInput from "../app-components/StoryWeaverChatInput.jsx";
-import StoryWeaverMessage from "../app-components/StoryWeaverMessage.jsx";
+import StoryWeaverChatInput from "@/app-components/StoryWeaverChatInput.jsx";
+import StoryWeaverMessage from "@/app-components/StoryWeaverMessage.jsx";
 
 // Save chat to MongoDB
 const SAVE_CHAT_URL = `${import.meta.env.VITE_BACKEND_URL || 'http://localhost:8080'}/api/chats/save`;

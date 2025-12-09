@@ -1,13 +1,13 @@
 import React, { useContext, useState } from "react";
 import { motion } from "framer-motion";
-import CosmicBackground from "../app-components/CosmicBackground.jsx";
-import Header from "../app-components/Header.jsx";
-import Footer from "../app-components/Footer.jsx";
-import GoogleLoginButton from "../app-components/GoogleLoginButton.jsx";
-import { AuthContext } from "../context/AuthContext.jsx";
+import CosmicBackground from "@/app-components/CosmicBackground.jsx";
+import Header from "@/app-components/Header.jsx";
+import Footer from "@/app-components/Footer.jsx";
+import GoogleLoginButton from "@/app-components/GoogleLoginButton.jsx";
+import { AuthContext } from "@/context/AuthContext.jsx";
 import { Link, useNavigate } from "react-router-dom";
 import { Mail, Lock, User, LogIn } from "lucide-react";
-import API from "../api/axios";
+import API from "@/api/axios";
 import toast from "react-hot-toast";
 
 export default function Signup() {

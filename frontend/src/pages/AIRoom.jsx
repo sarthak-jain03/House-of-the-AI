@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import AISidebar from '../app-components/AISidebar.jsx';
-import PoetRoom from '../rooms/PoetRoom.jsx';
-import CodeWhispererRoom from '../rooms/CodeWhispererRoom.jsx';
-import DataSageRoom from '../rooms/DataSageRoom.jsx';
-import StoryWeaverRoom from '../rooms/StoryWeaverRoom.jsx';
-import DoctorRoom from '../rooms/DoctorRoom.jsx';
+import AISidebar from '@/app-components/AISidebar.jsx';
+import PoetRoom from '@/rooms/PoetRoom.jsx';
+import CodeWhispererRoom from '@/rooms/CodeWhispererRoom.jsx';
+import DataSageRoom from '@/rooms/DataSageRoom.jsx';
+import StoryWeaverRoom from '@/rooms/StoryWeaverRoom.jsx';
+import DoctorRoom from '@/rooms/DoctorRoom.jsx';
 
 const roomComponents = {
   poet: PoetRoom,
