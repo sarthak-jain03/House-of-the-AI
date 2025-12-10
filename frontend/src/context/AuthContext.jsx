@@ -25,7 +25,7 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // --------------------- LOGIN ---------------------
+  
   const login = async (formData) => {
     setLoading(true);
     setError("");

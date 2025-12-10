@@ -4,7 +4,7 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { sendOTPEmail } from "../utils/sendEmail.js";
 
-// Create JWT cookie
+
 const sendToken = (user, res) => {
   const token = jwt.sign(
     { id: user._id, email: user.email, name: user.name },
@@ -20,31 +20,29 @@ const sendToken = (user, res) => {
   });
 };
 
-// Generate OTP
+
 const generateOTP = () => Math.floor(100000 + Math.random() * 900000).toString();
 
-// -------------------- SIGNUP --------------------
 export const signup = async (req, res) => {
   try {
     const { name, email, password } = req.body;
 
-    // Check if user exists already
+    
     const existingUser = await User.findOne({ email });
     if (existingUser)
       return res.status(400).json({ message: "Email already registered." });
 
-    // Remove leftover pending signup
+    
     await PendingUser.deleteOne({ email });
 
-    // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Generate OTP
+    
     const otp = generateOTP();
     const otpHash = await bcrypt.hash(otp, 10);
     const otpExpiry = Date.now() + 10 * 60 * 1000;
 
-    // Store in PendingUser
+  
     const pending = await PendingUser.create({
       name,
       email,
@@ -53,7 +51,7 @@ export const signup = async (req, res) => {
       otpExpiry,
     });
 
-    // Send OTP email
+    
     await sendOTPEmail(email, otp);
 
     res.json({
@@ -67,7 +65,7 @@ export const signup = async (req, res) => {
   }
 };
 
-// -------------------- VERIFY OTP --------------------
+
 export const verifyOtp = async (req, res) => {
   try {
     const { tempId, otp } = req.body;
@@ -83,7 +81,7 @@ export const verifyOtp = async (req, res) => {
     if (!isMatch)
       return res.status(400).json({ message: "Invalid OTP." });
 
-    // Create real user
+    
     const user = await User.create({
       name: pending.name,
       email: pending.email,
@@ -91,10 +89,10 @@ export const verifyOtp = async (req, res) => {
       emailVerified: true,
     });
 
-    // Remove pending signup
+    
     await PendingUser.findByIdAndDelete(tempId);
 
-    // Auto login
+    
     sendToken(user, res);
 
     res.json({ message: "Signup complete!", user });
@@ -105,7 +103,7 @@ export const verifyOtp = async (req, res) => {
   }
 };
 
-// -------------------- RESEND OTP --------------------
+
 export const resendOtp = async (req, res) => {
   try {
     const { tempId } = req.body;
@@ -129,7 +127,7 @@ export const resendOtp = async (req, res) => {
   }
 };
 
-// -------------------- LOGIN --------------------
+
 export const login = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -150,7 +148,7 @@ export const login = async (req, res) => {
   }
 };
 
-// -------------------- GOOGLE AUTH (auto verified) --------------------
+
 export const googleAuth = async (req, res) => {
   try {
     const { googleId, email, name } = req.body;
@@ -174,13 +172,19 @@ export const googleAuth = async (req, res) => {
   }
 };
 
-// -------------------- LOGOUT --------------------
+
 export const logout = (req, res) => {
-  res.clearCookie("token");
-  res.json({ message: "Logged out" });
+  res.cookie("token", "", {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: process.env.NODE_ENV === "production" ? "None" : "Strict",
+    expires: new Date(0),
+  });
+
+  res.json({ message: "Logged out successfully" });
 };
 
-// -------------------- GET ME --------------------
+
 export const getMe = async (req, res) => {
   const user = await User.findById(req.user.id).select("-password");
   res.json({ user });
