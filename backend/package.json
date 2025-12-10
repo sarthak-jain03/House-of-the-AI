@@ -13,6 +13,7 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "@sendinblue/client": "^3.3.1",
     "axios": "^1.13.2",
     "bcryptjs": "^3.0.3",
     "cookie-parser": "^1.4.7",
@@ -25,6 +26,7 @@
     "nodemailer": "^7.0.11",
     "nodemon": "^3.1.11",
     "passport": "^0.7.0",
-    "passport-google-oauth20": "^2.0.0"
+    "passport-google-oauth20": "^2.0.0",
+    "resend": "^6.6.0"
   }
 }
