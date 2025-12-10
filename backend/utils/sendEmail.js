@@ -3,24 +3,24 @@ import nodemailer from "nodemailer";
 export const sendOTPEmail = async (email, otp) => {
   try {
     const transporter = nodemailer.createTransport({
-      service: "gmail",
+      host: process.env.SMTP_HOST,
+      port: Number(process.env.SMTP_PORT),
+      secure: false,
       auth: {
-        user: process.env.MAIL_USER,    
-        pass: process.env.MAIL_PASS,     
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASS,
       },
     });
 
     const mailOptions = {
-      from: process.env.MAIL_USER,
+      from: `"House of the AI" <${process.env.SENDER_EMAIL}>`,
       to: email,
       subject: "Your OTP Verification Code",
       html: `
-        <div style="font-family:Arial; line-height:1.5;">
-          <h2>Email Verification</h2>
-          <p>Your OTP for verifying your account is:</p>
-          <h1 style="font-size:32px; letter-spacing:3px;">${otp}</h1>
-          <p>This OTP expires in <strong>10 minutes</strong>.</p>
-        </div>
+        <h2>Email Verification Code</h2>
+        <p>Enter the following OTP to complete your signup:</p>
+        <h1 style="color:#4CAF50; font-size:32px;">${otp}</h1>
+        <p>This OTP expires in <strong>10 minutes</strong>.</p>
       `,
     };
 
