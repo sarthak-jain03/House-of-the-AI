@@ -13,7 +13,7 @@ export const sendOTPEmail = async (email, otp) => {
   });
 
     const mailOptions = {
-      from: `"House of the AI" <sarthakjain4452@gmail.com>"`,
+      from: `"House of the AI" <${process.env.MAIL_USER}>`,
       to: email,
       subject: "Your OTP Verification Code",
       html: `
