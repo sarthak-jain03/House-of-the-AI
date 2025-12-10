@@ -2,15 +2,18 @@ import nodemailer from "nodemailer";
 
 export const sendOTPEmail = async (email, otp) => {
   try {
-    const transporter = nodemailer.createTransport({
-    host: "smtp-relay.brevo.com",
-    port: 587,
-    secure: false,
-    auth: {
-      user: process.env.MAIL_USER,  
-      pass: process.env.MAIL_PASS,   
-    },
-  });
+   const transporter = nodemailer.createTransport({
+      host: "smtp.gmail.com",
+      port: 465,
+      secure: true,  
+      auth: {
+        user: process.env.MAIL_USER,
+        pass: process.env.MAIL_PASS,
+      },
+      tls: {
+        rejectUnauthorized: false, 
+      },
+    });
 
     const mailOptions = {
       from: `"House of the AI" <${process.env.MAIL_USER}>`,
