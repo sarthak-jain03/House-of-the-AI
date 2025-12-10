@@ -3,15 +3,17 @@ import nodemailer from "nodemailer";
 export const sendOTPEmail = async (email, otp) => {
   try {
     const transporter = nodemailer.createTransport({
-      service: "gmail",
-      auth: {
-        user: process.env.MAIL_USER,
-        pass: process.env.MAIL_PASS,
-      },
-    });
+    host: "smtp-relay.brevo.com",
+    port: 587,
+    secure: false,
+    auth: {
+      user: process.env.MAIL_USER,  
+      pass: process.env.MAIL_PASS,   
+    },
+  });
 
     const mailOptions = {
-      from: `"House of the AI" <${process.env.MAIL_USER}>`,
+      from: `"House of the AI" <sarthakjain4452@gmail.com>"`,
       to: email,
       subject: "Your OTP Verification Code",
       html: `
