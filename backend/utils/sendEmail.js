@@ -1,31 +1,25 @@
-import nodemailer from "nodemailer";
+import SibApiV3Sdk from "sib-api-v3-sdk";
 
 export const sendOTPEmail = async (email, otp) => {
   try {
-    const transporter = nodemailer.createTransport({
-      host: process.env.SMTP_HOST,
-      port: Number(process.env.SMTP_PORT),
-      secure: false,
-      auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS,
-      },
-    });
+    const client = SibApiV3Sdk.ApiClient.instance;
+    client.authentications["api-key"].apiKey = process.env.BREVO_API_KEY;
 
-    const mailOptions = {
-      from: `"House of the AI" <${process.env.SENDER_EMAIL}>`,
-      to: email,
+    const tranEmailApi = new SibApiV3Sdk.TransactionalEmailsApi();
+
+    await tranEmailApi.sendTransacEmail({
+      sender: { email: process.env.SENDER_EMAIL, name: "House of the AI" },
+      to: [{ email }],
       subject: "Your OTP Verification Code",
-      html: `
+      htmlContent: `
         <h2>Email Verification Code</h2>
         <p>Enter the following OTP to complete your signup:</p>
         <h1 style="color:#4CAF50; font-size:32px;">${otp}</h1>
         <p>This OTP expires in <strong>10 minutes</strong>.</p>
       `,
-    };
+    });
 
-    await transporter.sendMail(mailOptions);
-    console.log("OTP sent to:", email);
+    console.log("OTP sent successfully");
 
   } catch (error) {
     console.error("Email sending failed:", error);
