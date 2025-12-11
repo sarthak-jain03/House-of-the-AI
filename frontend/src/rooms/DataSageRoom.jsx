@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo, useEffect } from 'react';
+import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   BarChart3,
@@ -15,7 +15,6 @@ import DataSageChatInput from '@/app-components/DataSageChatInput.jsx';
 const API_BASE_URL = `${import.meta.env.VITE_INFERENCE_API_URL}`;
 const SAVE_CHAT_URL = `${import.meta.env.VITE_BACKEND_URL || 'http://localhost:8080'}/api/chats/save`;
 
-// ------------------------ SAVE CHAT TO DB ------------------------
 const saveChatToDB = async (userMessage, assistantResponse) => {
   try {
     await fetch(SAVE_CHAT_URL, {
@@ -33,32 +32,23 @@ const saveChatToDB = async (userMessage, assistantResponse) => {
   }
 };
 
-// ------------------------ UTIL: escape html ------------------------
+//UTIL: escape html 
 const escapeHtml = (str = "") =>
   String(str)
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;");
 
-// ------------------------ SIMPLE MARKDOWN -> HTML ------------------------
+// SIMPLE MARKDOWN -> HTML 
 const simpleMarkdownToHtml = (md) => {
   if (!md) return "";
 
-  // Basic safe conversion:
   let html = escapeHtml(md);
-
-  // Headers: ###, ##, #
   html = html.replace(/^### (.*$)/gim, "<h3>$1</h3>");
   html = html.replace(/^## (.*$)/gim, "<h2>$1</h2>");
   html = html.replace(/^# (.*$)/gim, "<h1>$1</h1>");
-
-  // Bold **text**
   html = html.replace(/\*\*(.*?)\*\*/gim, "<strong>$1</strong>");
-
-  // Inline code `code`
   html = html.replace(/`([^`]+)`/gim, "<code>$1</code>");
-
-  // Lists to UL
   html = html.replace(/(^|\n)(- .+(?:\n- .+)*)/g, (m, p1, group) => {
     const items = group
       .trim()
@@ -67,69 +57,52 @@ const simpleMarkdownToHtml = (md) => {
       .join("");
     return `${p1}<ul>${items}</ul>`;
   });
-
-  // Tables keep as pre to maintain alignment
   html = html.replace(/(^|\n)((?:.*\|.*\n)+)/g, (m, p1, group) => {
     if (group.includes("|")) {
       return `${p1}<pre style="white-space:pre-wrap;">${group.trim()}</pre>`;
     }
     return m;
   });
-
-  // Paragraphs: break on double newline
   html = html.replace(/\n\n+/g, "</p><p>");
   html = `<p>${html}</p>`;
-
   return html;
 };
 
-// ------------------------ FORMAT EDA SUMMARY (robust) ------------------------
+
 const formatEdaSummary = (eda, name) => {
   if (!eda) return "No EDA data available.";
 
   const safeName = name || "Dataset";
-
   let summary = `## 📊 EDA Summary for **${safeName}**\n\n`;
 
-  // Dimensions
   try {
     summary += `### 🧮 Dimensions\n- **Rows:** ${eda.rows ?? 'N/A'}\n- **Columns:** ${eda.columns ?? 'N/A'}\n\n`;
   } catch (e) {
     summary += `### 🧮 Dimensions\n- **Rows:** N/A\n- **Columns:** N/A\n\n`;
   }
 
-  // Missing values
   const missingValues = eda.missing_values || {};
   const totalMissing = Object.values(missingValues).reduce((s, c) => s + (Number(c) || 0), 0);
-
   summary += `### 🕳 Missing Values\n${totalMissing > 0 ? `${totalMissing} missing values found:` : "No missing values detected."}\n`;
-
   Object.entries(missingValues).forEach(([col, count]) => {
     if (count > 0) summary += `- ${col}: ${count}\n`;
   });
-
   summary += `\n`;
 
-  // Data types
   summary += `### 🏷 Data Types\n`;
   const types = eda.types || {};
   Object.entries(types).forEach(([col, type]) => {
     summary += `- **${col}**: \`${type}\`\n`;
   });
-
   summary += `\n`;
 
-  // Summary statistics
   const stats = eda.summary || {};
   const numericCols = Object.keys(stats || {}).filter(col => stats[col] && Object.keys(stats[col]).length > 0);
-
   if (numericCols.length > 0) {
     const showCols = numericCols.slice(0, 3);
-
     summary += `### 📈 Key Statistics\n`;
     summary += `| Statistic | ${showCols.join(" | ")} |\n`;
     summary += `|---|${"---|".repeat(showCols.length)}\n`;
-
     const statList = ["count", "mean", "std", "min", "max"];
     statList.forEach(stat => {
       let row = `| **${stat}** |`;
@@ -139,11 +112,9 @@ const formatEdaSummary = (eda, name) => {
       });
       summary += row + "\n";
     });
-
     summary += `\n`;
   }
 
-  // Outliers
   const outliers = eda.outliers_count || {};
   const outlierList = Object.entries(outliers).filter(([, count]) => count > 0);
   if (outlierList.length > 0) {
@@ -155,8 +126,8 @@ const formatEdaSummary = (eda, name) => {
 
   return summary;
 };
+ 
 
-// ------------------------ MAIN COMPONENT ------------------------
 export default function DataSageRoom() {
   const [messages, setMessages] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -171,15 +142,56 @@ export default function DataSageRoom() {
 
   const [selectedChart, setSelectedChart] = useState(null);
 
-  // ---------------- SEND MESSAGE ----------------
+ 
+  const pendingUserForSaveRef = useRef(null);
+
+  
+  const chatEndRef = useRef(null);
+
+  
+  const pushMessage = useCallback(async (msg) => {
+    setMessages((prev) => [...prev, msg]);
+
+    // Auto-save rules:
+    // - If message is charts (type === 'charts'), we DO NOT save the chart images.
+    // - If msg.role === 'user', we mark it as pending for pairing with the next assistant response.
+    // - If msg.role === 'assistant' AND there is a pending user, save pair (pendingUser, assistantContent).
+    // - If msg.role === 'assistant' AND no pending user => save with message: "System"
+    try {
+      if (msg.type === 'charts') {
+        return;
+      }
+
+      if (msg.role === 'user') {
+        
+        pendingUserForSaveRef.current = msg.content;
+        return;
+      }
+
+     
+      const pendingUser = pendingUserForSaveRef.current;
+      if (pendingUser) {
+        await saveChatToDB(pendingUser, typeof msg.content === 'string' ? msg.content : JSON.stringify(msg));
+        pendingUserForSaveRef.current = null;
+      } else {
+        await saveChatToDB("Analyze", typeof msg.content === 'string' ? msg.content : JSON.stringify(msg));
+      }
+    } catch (err) {
+      console.error("pushMessage save error:", err);
+    }
+  }, []);
+
+
   const handleSend = async (message) => {
-    setMessages(prev => [...prev, { role: 'user', content: message }]);
+    
+    await pushMessage({ role: 'user', content: message });
 
     if (!analysisResult) {
-      setMessages(prev => [...prev, {
+   
+      await pushMessage({
         role: 'assistant',
         content: "Please run **Analyze Dataset** first."
-      }]);
+      });
       return;
     }
 
@@ -196,50 +208,48 @@ export default function DataSageRoom() {
 
       if (data.success) {
         const assistantResponse = data.response;
-
-        setMessages(prev => [...prev, {
+        await pushMessage({
           role: 'assistant',
           content: assistantResponse,
           confidence: data.confidence ?? 95
-        }]);
-
-        await saveChatToDB(message, assistantResponse);
-
+        });
       } else {
-        setMessages(prev => [...prev, {
+        await pushMessage({
           role: 'assistant',
           content: "Data Sage error: " + (data.error || "Unknown error")
-        }]);
+        });
       }
-
     } catch (err) {
       console.error(err);
-      setMessages(prev => [...prev, { role: 'assistant', content: "Server error." }]);
+      await pushMessage({ role: 'assistant', content: "Server error." });
+    } finally {
+      setIsLoading(false);
     }
-
-    setIsLoading(false);
   };
 
-  // ---------------- FILE UPLOAD ----------------
-  const handleFileChange = (event) => {
+  // FILE UPLOAD 
+  const handleFileChange = async (event) => {
     const file = event.target.files[0];
-    if (file) {
-      setDatasetFile(file);
-      setDatasetName(file.name);
-      setAnalysisResult(null);
-      setCharts([]);
-      setEdaSummaryClicked(false);
-      setChartsClicked(false);
+    if (!file) return;
 
-      setMessages(prev => [...prev, {
-        role: 'assistant',
-        content: `**File uploaded:** ${file.name}`
-      }]);
-    }
+    setDatasetFile(file);
+    setDatasetName(file.name);
+    setAnalysisResult(null);
+    setCharts([]);
+    setEdaSummaryClicked(false);
+    setChartsClicked(false);
+
+    
+    await pushMessage({ role: 'user', content: `File uploaded: ${file.name}` });
+
+
+    await pushMessage({
+      role: 'assistant',
+      content: `Dataset ${file.name} uploaded`
+    });
   };
 
-  // ---------------- REMOVE FILE ----------------
-  const handleRemoveFile = () => {
+  const handleRemoveFile = async () => {
     setDatasetFile(null);
     setDatasetName(null);
     setAnalysisResult(null);
@@ -247,18 +257,22 @@ export default function DataSageRoom() {
     setEdaSummaryClicked(false);
     setChartsClicked(false);
 
-    setMessages(prev => [...prev, {
+    await pushMessage({
       role: 'assistant',
       content: "**Dataset removed. Upload again to restart.**"
-    }]);
+    });
   };
 
-  // ---------------- ANALYZE DATASET ----------------
   const handleAnalyzeDataset = useCallback(async () => {
     if (!datasetFile) return;
 
+    
+    await pushMessage({ role: 'user', content: "Analyze dataset" });
+
     setIsLoading(true);
-    setMessages(prev => [...prev, { role: 'assistant', content: `Analyzing **${datasetName}**...` }]);
+
+
+    await pushMessage({ role: 'assistant', content: `Analyzing **${datasetName}**...` });
 
     try {
       const formData = new FormData();
@@ -270,15 +284,10 @@ export default function DataSageRoom() {
       if (data.success) {
         setAnalysisResult(data);
         setCharts(data.charts || []);
-
         setEdaSummaryClicked(false);
         setChartsClicked(false);
 
-        setMessages(prev => [
-  ...prev,
-  {
-    role: "assistant",
-    content:
+        const analysisText =
 `# 🔍 Advanced Dataset Analysis: **${datasetName}**
 
 ## 🧮 Basic Structure
@@ -361,70 +370,79 @@ ${data.eda?.quality_flags?.join("\n") || "No major issues detected."}
 
 ## 🤖 ML Readiness Recommendation
 ${data.eda?.ml_recommendations?.join("\n") || "Dataset ready for use."}
+`;
 
-`
-  }
-]);
+        await pushMessage({
+          role: 'assistant',
+          content: analysisText,
+          confidence: 100
+        });
 
 
-        await saveChatToDB(
-          `Analyze dataset: ${datasetName}`,
-          `Analysis completed with ${data.eda?.rows ?? 'N/A'} rows and ${data.eda?.columns ?? 'N/A'} columns.`
-        );
       } else {
-        setMessages(prev => [...prev, {
+        await pushMessage({
           role: 'assistant',
           content: `Analysis failed: ${data.error || 'unknown error'}`
-        }]);
+        });
       }
 
     } catch (err) {
       console.error(err);
-      setMessages(prev => [...prev, { role: 'assistant', content: "Failed to analyze dataset." }]);
+      await pushMessage({ role: 'assistant', content: "Failed to analyze dataset." });
+    } finally {
+      setIsLoading(false);
     }
+  }, [datasetFile, datasetName, pushMessage]);
 
-    setIsLoading(false);
-  }, [datasetFile, datasetName]);
-
-  // ---------------- EDA SUMMARY ----------------
+  
   const handleEdaSummary = useCallback(async () => {
     if (!analysisResult || edaSummaryClicked) return;
+
+    
+    await pushMessage({ role: 'user', content: "Show EDA Summary" });
 
     const summaryText = formatEdaSummary(
       analysisResult.eda,
       datasetName || analysisResult.dataset_name || "Dataset"
     );
 
-    setMessages(prev => [...prev, {
+    
+    await pushMessage({
       role: 'assistant',
       content: summaryText,
       confidence: 100
-    }]);
-
-    await saveChatToDB("Show EDA Summary", summaryText);
+    });
 
     setEdaSummaryClicked(true);
+  }, [analysisResult, edaSummaryClicked, datasetName, pushMessage]);
 
-  }, [analysisResult, edaSummaryClicked, datasetName]);
-
-  // ---------------- CHARTS ----------------
+  
   const handleGenerateChart = useCallback(async () => {
     if (!analysisResult || chartsClicked) return;
 
-    setChartsClicked(true);
+    
+    await pushMessage({ role: 'user', content: "View dataset charts" });
 
     const responseText = `Displaying ${charts.length} visual charts.`;
 
-    setMessages(prev => [...prev, {
+    await pushMessage({
       role: 'assistant',
       content: responseText
-    }]);
+    });
 
-    await saveChatToDB("View dataset charts", responseText);
 
-  }, [analysisResult, chartsClicked, charts.length]);
+    await pushMessage({
+      role: 'assistant',
+      type: 'charts',
+      charts: charts || []
+    });
 
-  // ---------------- DOWNLOAD REPORT ----------------
+    setChartsClicked(true);
+  }, [analysisResult, chartsClicked, charts, pushMessage]);
+
+ 
+
+
   const handleDownloadReport = useCallback(async () => {
     if (!analysisResult) {
       alert("No analysis available to download. Run Analyze Dataset first.");
@@ -432,20 +450,18 @@ ${data.eda?.ml_recommendations?.join("\n") || "Dataset ready for use."}
     }
 
     try {
-      // Build markdown summary
       const md = formatEdaSummary(
         analysisResult.eda,
         datasetName || analysisResult.dataset_name || "Dataset"
       );
 
-      // Convert to HTML
       const summaryHtml = simpleMarkdownToHtml(md);
 
-      // Build charts HTML (if any)
       let chartsHtml = "";
       if (charts && charts.length > 0) {
         chartsHtml = charts
           .map((c, idx) => {
+            
             if (c.b64) {
               return `<div style="margin-bottom:18px;">
                         <h4 style="margin-bottom:6px;">${escapeHtml(c.title || `Chart ${idx + 1}`)}</h4>
@@ -463,7 +479,6 @@ ${data.eda?.ml_recommendations?.join("\n") || "Dataset ready for use."}
           .join("\n");
       }
 
-      // Build HTML doc
       const htmlDoc = `
         <!doctype html>
         <html>
@@ -488,11 +503,9 @@ ${data.eda?.ml_recommendations?.join("\n") || "Dataset ready for use."}
           <div class="container">
             <h1>Data Sage Report — ${escapeHtml(datasetName || "Dataset")}</h1>
             <div class="meta">Generated: ${new Date().toLocaleString()}</div>
-
             <section>
               ${summaryHtml}
             </section>
-
             ${chartsHtml ? `<hr style="border:none;height:1px;background:rgba(255,255,255,0.04);margin:20px 0;" />` : ""}
             <section>
               ${chartsHtml}
@@ -502,7 +515,6 @@ ${data.eda?.ml_recommendations?.join("\n") || "Dataset ready for use."}
         </html>
       `;
 
-      // Create blob & download
       const blob = new Blob([htmlDoc], { type: "text/html;charset=utf-8" });
       const fileName = `${(datasetName || "dataset").replace(/\s+/g, "_")}_report.html`;
 
@@ -514,19 +526,26 @@ ${data.eda?.ml_recommendations?.join("\n") || "Dataset ready for use."}
       a.click();
       a.remove();
       URL.revokeObjectURL(url);
-
     } catch (err) {
       console.error("Download report failed:", err);
       alert("Failed to generate report. See console for details.");
     }
   }, [analysisResult, charts, datasetName]);
 
-  // ---------------- UI COMPUTED STATES ----------------
+
   const isAnalysisReady = useMemo(() => datasetFile && !analysisResult, [datasetFile, analysisResult]);
   const isReportReady = useMemo(() => !!analysisResult, [analysisResult]);
-  const isChatReady = useMemo(() => datasetFile, [datasetFile]);
+  const isChatReady = useMemo(() => !!datasetFile, [datasetFile]);
 
-  // ---------------- RENDER ----------------
+  
+  useEffect(() => {
+    const t = setTimeout(() => {
+      chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }, 50);
+    return () => clearTimeout(t);
+  }, [messages, chartsClicked, isLoading]);
+
+
   return (
     <div className="flex-1 flex flex-col h-screen">
       {/* Hidden File Input */}
@@ -635,50 +654,55 @@ ${data.eda?.ml_recommendations?.join("\n") || "Dataset ready for use."}
             </p>
           </motion.div>
         ) : (
-          messages.map((msg, index) => (
-            <DataSageMessage
-              key={index}
-              message={msg.content}
-              isUser={msg.role === 'user'}
-              confidence={msg.confidence}
-            />
-          ))
-        )}
+          messages.map((msg, index) => {
+            if (msg.type === 'charts') {
+              return (
+                <div key={index} className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  {msg.charts && msg.charts.length > 0 ? msg.charts.map((chart, idx) => (
+                    <div
+                      key={chart.id || chart.title || idx}
+                      className="bg-white/5 border border-white/10 p-4 rounded-xl shadow-lg hover:shadow-blue-500/20 transition cursor-pointer"
+                      onClick={() => setSelectedChart(chart)}
+                    >
+                      <div className="w-full flex justify-center">
+                        <img
+                          src={`data:image/png;base64,${chart.b64}`}
+                          alt={chart.title}
+                          className="rounded-lg max-h-72 w-auto object-contain"
+                        />
+                      </div>
 
-        {chartsClicked && charts && charts.length > 0 && (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {charts.map((chart, idx) => (
-              <div
-                key={chart.id || chart.title || idx}
-                className="bg-white/5 border border-white/10 p-4 rounded-xl shadow-lg hover:shadow-blue-500/20 transition cursor-pointer"
-                onClick={() => setSelectedChart(chart)}
-              >
-                <div className="w-full flex justify-center">
-                  <img
-                    src={`data:image/png;base64,${chart.b64}`}
-                    alt={chart.title}
-                    className="rounded-lg max-h-72 w-auto object-contain"
-                  />
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          const link = document.createElement("a");
+                          link.href = `data:image/png;base64,${chart.b64}`;
+                          link.download = `${datasetName || "chart"}_${idx + 1}.png`;
+                          link.click();
+                        }}
+                        className="mt-4 w-full bg-blue-500/20 hover:bg-blue-500/30 text-blue-300 text-sm py-2 rounded-lg font-medium"
+                      >
+                        Download Chart
+                      </button>
+                    </div>
+                  )) : (
+                    <div className="text-gray-400">No charts available.</div>
+                  )}
                 </div>
+              );
+            }
 
-                {/* Download button */}
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    const link = document.createElement("a");
-                    link.href = `data:image/png;base64,${chart.b64}`;
-                    link.download = `${datasetName || "chart"}_${idx + 1}.png`;
-                    link.click();
-                  }}
-                  className="mt-4 w-full bg-blue-500/20 hover:bg-blue-500/30 text-blue-300 text-sm py-2 rounded-lg font-medium"
-                >
-                  Download Chart
-                </button>
-              </div>
-            ))}
-          </div>
+            // Normal text messages
+            return (
+              <DataSageMessage
+                key={index}
+                message={msg.content}
+                isUser={msg.role === 'user'}
+                confidence={msg.confidence}
+              />
+            );
+          })
         )}
-
 
         {isLoading && (
           <div className="flex items-center gap-2 text-gray-400">
@@ -687,6 +711,9 @@ ${data.eda?.ml_recommendations?.join("\n") || "Dataset ready for use."}
             <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }} />
           </div>
         )}
+
+        {/* Scroll anchor */}
+        <div ref={chatEndRef} />
       </div>
 
       {/* INPUT */}
@@ -727,6 +754,7 @@ ${data.eda?.ml_recommendations?.join("\n") || "Dataset ready for use."}
               <img
                 src={`data:image/png;base64,${selectedChart.b64}`}
                 className="max-h-[90vh] max-w-[90vw] object-contain rounded-xl"
+                alt={selectedChart.title || "chart"}
               />
 
               {/* Download inside modal */}

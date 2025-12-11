@@ -75,7 +75,7 @@ export default function Header() {
                 shadow-orange-500/30 hover:shadow-orange-500/50 transition-all"
               >
                 <User className="w-4 h-4" />
-                Welcome Home, {user.name.split(" ")[0]}
+                Welcome, {user.name.split(" ")[0]}
               </button>
 
               {/* Dropdown */}

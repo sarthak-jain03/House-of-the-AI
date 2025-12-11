@@ -11,6 +11,15 @@ const NODE_SAVE_API = `${import.meta.env.VITE_BACKEND_URL || 'http://localhost:8
 export default function PoetRoom() {
   const [messages, setMessages] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
+  const chatEndRef = React.useRef(null);
+
+  React.useEffect(() => {
+    const t = setTimeout(() => {
+      chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }, 50);
+
+    return () => clearTimeout(t);
+  }, [messages, isLoading]);
 
 
   const saveChat = async (message, response) => {
@@ -162,7 +171,9 @@ export default function PoetRoom() {
             />
           </div>
         )}
+        <div ref={chatEndRef} />
       </div>
+
 
       {/* Input Box */}
       <div className="p-6 border-t border-white/10">

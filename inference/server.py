@@ -34,10 +34,10 @@ FIREWORKS_MODEL = os.getenv("FIREWORKS_MODEL")
 
 
 MODELS = {
-    "poet": "accounts/fireworks/models/deepseek-v3p2",
-    "coder": "accounts/fireworks/models/deepseek-r1-distill-qwen-1.5b",
-    "story": "accounts/fireworks/models/deepseek-r1-distill-qwen-1.5b",
-    "analyzer": "accounts/fireworks/models/deepseek-v3p2"
+    "poet": os.getenv("POET_MODEL"),
+    "coder": os.getenv("CODER_MODEL"),
+    "story": os.getenv("STORY_MODEL"),
+    "analyzer": os.getenv("DATASET_ANALYZER_MODEL")
 }
 
 clients = {name: None for name in MODELS}

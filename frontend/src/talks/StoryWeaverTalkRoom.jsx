@@ -9,6 +9,16 @@ const API_URL = `${import.meta.env.VITE_BACKEND_URL}/api/chats/history/story`;
 export default function StoryWeaverTalkRoom() {
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(true);
+  const chatEndRef = React.useRef(null);
+
+  useEffect(() => {
+  const t = setTimeout(() => {
+    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, 50);
+
+  return () => clearTimeout(t);
+}, [messages, loading]);
+
 
   useEffect(() => {
     const fetchHistory = async () => {
@@ -112,6 +122,8 @@ export default function StoryWeaverTalkRoom() {
             />
           ))
         )}
+
+        <div ref={chatEndRef} />
 
       </div>
     </div>

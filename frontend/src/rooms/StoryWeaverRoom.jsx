@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { motion } from "framer-motion";
 import { BookOpen, Sparkles, Film, Scroll, Users, GitBranch } from "lucide-react";
 import StoryWeaverChatInput from "@/app-components/StoryWeaverChatInput.jsx";
@@ -30,6 +30,17 @@ export default function StoryWeaverRoom() {
   const [messages, setMessages] = useState([]);
   const [storyText, setStoryText] = useState("");  
   const [isLoading, setIsLoading] = useState(false);
+
+  const chatEndRef = useRef(null);
+
+  useEffect(() => {
+    const t = setTimeout(() => {
+      chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }, 50);
+
+    return () => clearTimeout(t);
+  }, [messages, isLoading]);
+
 
   const triggerRequest = async (action, optionalPrompt = "") => {
     const finalPrompt = optionalPrompt || action;
@@ -237,6 +248,7 @@ export default function StoryWeaverRoom() {
             <div className="w-2 h-2 bg-orange-400 rounded-full animate-bounce" style={{ animationDelay: "0.2s" }} />
           </div>
         )}
+        <div ref={chatEndRef} />
 
       </div>
 
