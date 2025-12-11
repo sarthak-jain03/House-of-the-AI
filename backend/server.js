@@ -5,10 +5,11 @@ import mongoose from "mongoose";
 import authRoutes from "./routes/authRoutes.js";
 import chatRoutes from "./routes/chatRoutes.js"; 
 import dotenv from "dotenv";
-
+import visitorRoutes from "./routes/visitorRoutes.js";
 dotenv.config();
 
 const app = express();
+
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -21,6 +22,7 @@ app.use(
   })
 );
 
+app.use("/api", visitorRoutes)
 app.use("/api/auth", authRoutes);
 app.use("/api/chats", chatRoutes);  
 
