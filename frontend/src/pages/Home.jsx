@@ -27,7 +27,10 @@ export default function Home() {
           transition={{ duration: 0.8 }}
           className="max-w-3xl mx-auto"
         >
-          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6 leading-tight">
+          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6 leading-tight hidden sm:block">
+            Welcome to the House of the AI
+          </h1>
+          <h1 className="text-3xl md:text-5xl lg:text-6xl font-bold text-white mb-6 leading-tight sm:hidden">
             Welcome to the House of the AI
           </h1>
           <p className="text-gray-300 text-lg md:text-xl mb-10 max-w-2xl mx-auto">
@@ -55,7 +58,10 @@ export default function Home() {
             whileInView={{ opacity: 1, y: 0 }} 
             viewport={{ once: true }}
           >
-            <h2 className="text-white text-3xl font-bold mb-3">
+            <h2 className="text-white text-3xl font-bold mb-3 hidden sm:block">
+              Discover the Residents of Our House
+            </h2>
+            <h2 className="text-white text-2xl font-bold mb-3 sm:hidden">
               Discover the Residents of Our House
             </h2>
             <p className="text-gray-400 mb-10">

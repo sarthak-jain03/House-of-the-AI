@@ -6,16 +6,38 @@ import Footer from '@/app-components/Footer.jsx';
 import { Input } from "@/components/ui/input.jsx";
 import { Textarea } from "@/components/ui/textarea.jsx";
 import { Button } from "@/components/ui/button.jsx";
-import { Mail, MessageSquare, Send, Check, PhoneCall } from 'lucide-react';
+import { Mail, Send, Check, PhoneCall } from 'lucide-react';
 
 export default function Contact() {
   const [formData, setFormData] = useState({ name: '', email: '', message: '' });
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    setIsSubmitted(true);
+    setLoading(true);
+
+    try {
+      const res = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/feedback`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      });
+
+      const data = await res.json();
+
+      if (data.success) {
+        setIsSubmitted(true);
+        setFormData({ name: '', email: '', message: '' });
+      } else {
+        alert("Failed to send feedback. Please try again.");
+      }
+    } catch (err) {
+      console.error("Feedback error:", err);
+      alert("Server error. Please try again later.");
+    }
+
+    setLoading(false);
   };
 
   return (
@@ -24,6 +46,8 @@ export default function Contact() {
       
       <main className="py-20 px-6">
         <div className="max-w-2xl mx-auto">
+          
+        
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
@@ -35,6 +59,7 @@ export default function Contact() {
             </p>
           </motion.div>
 
+        
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -42,15 +67,18 @@ export default function Contact() {
             className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-8"
           >
             {isSubmitted ? (
+             
               <div className="text-center py-12">
                 <div className="w-16 h-16 rounded-full bg-green-500/20 flex items-center justify-center mx-auto mb-4">
                   <Check className="w-8 h-8 text-green-400" />
                 </div>
-                <h2 className="text-2xl font-bold text-white mb-2">Message Sent!</h2>
+                <h2 className="text-2xl font-bold text-white mb-2">Your feedback has been sent to Sarthak Jain</h2>
                 <p className="text-gray-400">Thank you for reaching out. We'll get back to you soon.</p>
               </div>
             ) : (
+           
               <form onSubmit={handleSubmit} className="space-y-6">
+                
                 <div>
                   <label className="block text-white text-sm font-medium mb-2">Name</label>
                   <Input
@@ -62,6 +90,7 @@ export default function Contact() {
                     required
                   />
                 </div>
+
                 
                 <div>
                   <label className="block text-white text-sm font-medium mb-2">Email</label>
@@ -74,7 +103,8 @@ export default function Contact() {
                     required
                   />
                 </div>
-                
+
+               
                 <div>
                   <label className="block text-white text-sm font-medium mb-2">Message</label>
                   <Textarea
@@ -85,19 +115,25 @@ export default function Contact() {
                     required
                   />
                 </div>
+
                 
                 <Button 
                   type="submit"
+                  disabled={loading}
                   className="w-full bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white py-6"
                 >
-                  <Send className="w-4 h-4 mr-2" />
-                  Send Message
+                  {loading ? "Sending..." : (
+                    <>
+                      <Send className="w-4 h-4 mr-2" />
+                      Send Message
+                    </>
+                  )}
                 </Button>
               </form>
             )}
           </motion.div>
 
-          {/* Contact Info */}
+          
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -115,7 +151,7 @@ export default function Contact() {
           </motion.div>
         </div>
       </main>
-      
+
       <Footer />
     </CosmicBackground>
   );

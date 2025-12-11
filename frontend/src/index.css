@@ -115,3 +115,11 @@
 }
 
 
+html, body, #root {
+  height: 100%;
+}
+
+body {
+  overflow-x: hidden; /* prevents accidental horizontal overflow */
+  box-sizing: border-box;
+}

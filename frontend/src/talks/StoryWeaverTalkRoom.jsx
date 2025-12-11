@@ -61,27 +61,23 @@ export default function StoryWeaverTalkRoom() {
   }, []);
 
   return (
-    <div className="flex-1 flex flex-col h-screen">
+    <div className="flex-1 flex flex-col h-screen overflow-x-hidden">
 
       {/* HEADER */}
       <div className="p-6 border-b border-white/10">
         <div className="flex items-center gap-4">
-          <div
-            className="w-14 h-14 rounded-2xl bg-gradient-to-br 
+          <div className="flex w-12 h-12 sm:w-14 sm:h-14 rounded-2xl  bg-gradient-to-br 
             from-orange-500/20 to-orange-600/20 
-            border border-orange-500/30 flex items-center justify-center"
-          >
-            <BookOpen className="w-7 h-7 text-orange-400" />
+            border border-orange-500/30 items-center justify-center">
+            
+            <BookOpen className="w-5 h-5 sm:w-7 sm:h-7 text-teal-400" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold text-white hidden sm:block">The Story Weaver's Talk Room</h1>
+            <h1 className="text-xl font-bold text-white sm:hidden">Story Weaver's Talk Room</h1>
+            <p className="text-gray-400 text-sm">Revisit your stories, scripts & ideas.</p>
           </div>
 
-          <div>
-            <h1 className="text-2xl font-bold text-white">
-              The Story Weaver’s Talk Room
-            </h1>
-            <p className="text-gray-400 text-sm">
-              Revisit your stories, scripts, characters & ideas.
-            </p>
-          </div>
         </div>
       </div>
 

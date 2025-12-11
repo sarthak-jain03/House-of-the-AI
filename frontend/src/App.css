@@ -57,3 +57,10 @@
 
 
 
+@keyframes slideLeft {
+  from { transform: translateX(100%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+.animate-slideLeft {
+  animation: slideLeft 0.35s ease-out forwards;
+}

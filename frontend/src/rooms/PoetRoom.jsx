@@ -115,7 +115,8 @@ export default function PoetRoom() {
             <Feather className="w-7 h-7 text-purple-400" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-white">The Poet's Room</h1>
+            <h1 className="text-2xl font-bold text-white hidden sm:block">The Poet's Room</h1>
+            <h1 className="text-xl font-bold text-white sm:hidden">The Poet's Room</h1>
             <p className="text-gray-400 text-sm">Where words become living art.</p>
           </div>
         </div>

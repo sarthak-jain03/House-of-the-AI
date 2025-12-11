@@ -126,9 +126,13 @@ export default function StoryWeaverRoom() {
             <BookOpen className="w-7 h-7 text-orange-400" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-white">The Story Weaver's Room</h1>
-            <p className="text-gray-400 text-sm">
+            <h1 className="text-2xl font-bold text-white hidden sm:block">The Story Weaver's Room</h1>
+            <h1 className="text-xl font-bold text-white sm:hidden">The Story Weaver's Room</h1>
+            <p className="text-gray-400 text-sm hidden sm:block">
               Craft compelling narratives, scripts, characters, and story arcs.
+            </p>
+            <p className="text-gray-400 text-sm sm:hidden">
+              Craft stories, scripts, characters, and more.
             </p>
           </div>
         </div>

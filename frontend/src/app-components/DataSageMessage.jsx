@@ -1,41 +1,17 @@
-// DataSageMessage.jsx
+
 import React, { useState, useMemo } from "react";
 import { motion } from "framer-motion";
 import { User, Bot, Copy, Maximize2, Image } from "lucide-react";
 
-/**
- * DataSageMessage — upgraded renderer
- *
- * Features:
- * - Parses markdown and extracts table blocks and inline images (base64 or urls)
- * - Renders tables as React components with:
- *    * syntax highlighting in cells (inline `code`)
- *    * numeric heatmap (auto scaled)
- *    * "Copy table" button (copies markdown + HTML)
- *    * Expand button -> modal (fullscreen table)
- *    * Collapsible wrapper (using <details>)
- * - Renders image thumbnails (detects data:image/png;base64,...)
- *    * click to open modal / enlarge
- * - Renders remaining markdown using a safe-ish converter (headings, bold, lists, code)
- * - Keeps original layout: avatar, confidence pill, user vs assistant styling
- */
-
-/* ---------------------------
-   Utility: Markdown utilities
-   ---------------------------*/
-
-// Extracts table blocks and image blocks, returning segments
 function extractSegments(markdown) {
   const segments = [];
   if (!markdown) return segments;
 
   let rest = String(markdown);
 
-  // regex: table block (lines starting and ending with | and containing at least one \n)
   const tableRegex = /(\|[^\n]*\|\n(?:\|[^\n]*\|\n)+)/gm;
   const imgRegex = /!\[.*?\]\((data:image\/[a-zA-Z]+;base64,[^)]+|https?:\/\/[^\s)]+)\)/g;
 
-  // We will first split by table blocks, then within non-table parts detect images.
   let lastIndex = 0;
   let match;
 
@@ -53,7 +29,7 @@ function extractSegments(markdown) {
   return segments;
 }
 
-// For non-table text, split into image and text segments
+
 function pushNonTableSegments(text, segments, imgRegex) {
   let last = 0;
   let m;
@@ -62,30 +38,28 @@ function pushNonTableSegments(text, segments, imgRegex) {
     const e = imgRegex.lastIndex;
     const before = text.slice(last, s);
     if (before) segments.push({ type: "text", content: before });
-    segments.push({ type: "image", content: m[1] }); // m[1] is URL or data:image...
+    segments.push({ type: "image", content: m[1] }); 
     last = e;
   }
   const tail = text.slice(last);
   if (tail) segments.push({ type: "text", content: tail });
 }
 
-// Convert a markdown table string into header array + rows array
+
 function parseMarkdownTable(tbl) {
   const lines = tbl.trim().split("\n").map((l) => l.trim());
   if (lines.length < 2) return null;
 
-  // header is first line, separator is second line (we ignore validation)
   const headerCells = lines[0].split("|").slice(1, -1).map((h) => h.trim());
   const bodyLines = lines.slice(2);
   const rows = bodyLines.map((r) => r.split("|").slice(1, -1).map((c) => c.trim()));
   return { headers: headerCells, rows };
 }
 
-// Simple inline Markdown -> React nodes for small pieces (bold, italic, inline code, links)
+
 function inlineMarkdownToNodes(text) {
   if (!text) return null;
-  // escape & simple replacements
-  // We'll process inline code first, then bold/italic, links
+  
   const parts = [];
   let rest = text;
   const codeRegex = /`([^`]+)`/;
@@ -100,12 +74,12 @@ function inlineMarkdownToNodes(text) {
     parts.push(React.createElement("code", { key: Math.random(), style: codeStyle }, m[1]));
     rest = rest.slice(idx + m[0].length);
   }
-  // join parts (strings and code elements), then process bold/italic & links in strings
+  
   const final = [];
   parts.forEach((p, i) => {
     if (typeof p === "string") {
       let s = p;
-      // replace **bold**
+      
       const boldRegex = /\*\*(.*?)\*\*/g;
       let last = 0;
       let m2;
@@ -132,9 +106,7 @@ function escapeHtml(str) {
     .replace(/\n/g, "\n");
 }
 
-/* ---------------------------
-   Styles
-   ---------------------------*/
+
 const tableWrapperStyle = {
   background: "linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01))",
   border: "1px solid rgba(255,255,255,0.06)",
@@ -168,9 +140,7 @@ const codeStyle = {
   fontFamily: "monospace",
 };
 
-/* ---------------------------
-   Table Component
-   ---------------------------*/
+
 function TableBlock({
   markdown,
   initiallyCollapsed = false,
@@ -181,7 +151,7 @@ function TableBlock({
 
   const { headers, rows } = parsed;
 
-  // compute numeric heatmap scale across all numeric cells
+ 
   const numericValues = [];
   const numericMask = rows.map((r) =>
     r.map((cell) => {
@@ -195,20 +165,20 @@ function TableBlock({
   const min = numericValues.length ? Math.min(...numericValues) : 0;
   const max = numericValues.length ? Math.max(...numericValues) : 0;
 
-  // heat color function (from light-blue -> deep-blue)
+  
   const heatColor = (val) => {
     if (val == null || max === min) return "transparent";
     const ratio = (val - min) / (max - min);
-    // simple gradient between two hues
-    const from = [18, 56, 100]; // rgb for lightish
-    const to = [7, 61, 130]; // rgb for deep
+    
+    const from = [18, 56, 100]; 
+    const to = [7, 61, 130];
     const r = Math.round(from[0] + (to[0] - from[0]) * ratio);
     const g = Math.round(from[1] + (to[1] - from[1]) * ratio);
     const b = Math.round(from[2] + (to[2] - from[2]) * ratio);
     return `linear-gradient(90deg, rgba(${r},${g},${b},0.12), rgba(${r},${g},${b},0.04))`;
   };
 
-  // copy helpers
+  
   const copyMarkdownToClipboard = async () => {
     try {
       await navigator.clipboard.writeText(markdown);
@@ -220,7 +190,7 @@ function TableBlock({
 
   const copyHtmlToClipboard = async () => {
     try {
-      // build HTML table string
+      
       const html = buildHtmlFromTable(headers, rows);
       await navigator.clipboard.writeText(html);
       toast("Table HTML copied to clipboard");
@@ -229,9 +199,9 @@ function TableBlock({
     }
   };
 
-  // minimal toast (ephemeral)
+  
   function toast(msg) {
-    // create a small floating element
+    
     const el = document.createElement("div");
     el.innerText = msg;
     el.style.position = "fixed";
@@ -301,8 +271,6 @@ function TableBlock({
                     const numeric = numericMask[ri][ci];
                     const bg = numeric != null ? heatColor(numeric) : "transparent";
 
-                    // syntax highlight inside cell: detect inline `code` and multiline ``` blocks (we keep it simple)
-                    // For inline `code`, we render <code> elements (handled in inlineMarkdownToNodes)
                     const nodes = inlineMarkdownToNodes(cell);
 
                     return (
@@ -317,7 +285,7 @@ function TableBlock({
                       >
                         <div style={{ display: "flex", gap: 8, alignItems: "center", justifyContent: "space-between" }}>
                           <div style={{ flex: 1 }}>{nodes}</div>
-                          {/* small value badge for numeric cells */}
+                        
                           {numeric != null && (
                             <div style={{ marginLeft: 8, fontSize: 12, color: "#9ca3af" }}>
                               {String(numeric)}
@@ -355,11 +323,9 @@ function buildHtmlFromTable(headers, rows) {
   return html;
 }
 
-/* ---------------------------
-   Image thumbnail component
-   ---------------------------*/
+
 function ImageThumb({ src, onOpen }) {
-  // render small thumbnail, click to open
+
   const isData = src.startsWith("data:image");
   return (
     <div style={{ display: "inline-block", margin: 6 }}>
@@ -400,9 +366,6 @@ function ImageThumb({ src, onOpen }) {
   );
 }
 
-/* ---------------------------
-   Main Component
-   ---------------------------*/
 export default function DataSageMessage({ message, isUser, confidence }) {
   const [modalOpen, setModalOpen] = useState(false);
   const [modalContent, setModalContent] = useState(null);
@@ -425,7 +388,7 @@ export default function DataSageMessage({ message, isUser, confidence }) {
       animate={{ opacity: 1, y: 0 }}
       className={`flex items-start gap-3 ${isUser ? "flex-row-reverse" : ""}`}
     >
-      {/* Avatar */}
+     
       <div
         className={
           "w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 " +
@@ -437,7 +400,7 @@ export default function DataSageMessage({ message, isUser, confidence }) {
         {isUser ? <User className="w-4 h-4 text-white" /> : <Bot className="w-4 h-4 text-teal-400" />}
       </div>
 
-      {/* Message body */}
+     
       <div className={`max-w-[75%] ${isUser ? "text-right" : ""}`}>
         <div
           className={
@@ -451,7 +414,7 @@ export default function DataSageMessage({ message, isUser, confidence }) {
             <p className="whitespace-pre-wrap text-left">{message}</p>
           ) : (
             <div className="text-left">
-              {/* Render segments */}
+             
               {segments.map((seg, idx) => {
                 if (seg.type === "table") {
                   return (
@@ -473,8 +436,7 @@ export default function DataSageMessage({ message, isUser, confidence }) {
                     </div>
                   );
                 }
-                // plain text -> convert basic markdown (headings, lists) to HTML and render via dangerouslySetInnerHTML
-                // We use a simple converter: headings, bold, italic, inline code, blockquote, lists
+                
                 return (
                   <div
                     key={idx}
@@ -496,7 +458,7 @@ export default function DataSageMessage({ message, isUser, confidence }) {
         )}
       </div>
 
-      {/* Modal */}
+      
       {modalOpen && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center"
@@ -529,7 +491,7 @@ export default function DataSageMessage({ message, isUser, confidence }) {
 
             {modalContent?.type === "table" && (
               <div>
-                {/* Render expanded table using the same TableBlock but not collapsible and without action buttons (or keep them) */}
+
                 <div style={{ marginBottom: 6, color: "#cbd5e1", fontWeight: 700 }}>
                   {modalContent.title || "Table"}
                 </div>
@@ -570,10 +532,7 @@ export default function DataSageMessage({ message, isUser, confidence }) {
   );
 }
 
-/* ---------------------------
-   Simple markdown -> HTML converter for non-table segments
-   (keeps headings, lists, code, blockquote, basic tables removed earlier)
-   ---------------------------*/
+
 function simpleMarkdownToHtml(md) {
   if (!md) return "";
 
@@ -610,11 +569,9 @@ function simpleMarkdownToHtml(md) {
   return html;
 }
 
-/* ---------------------------
-   Helpers for inline HTML in modal table cells
-   ---------------------------*/
+
 function inlineHtml(text) {
   if (!text) return "";
-  // convert inline `code` to HTML code element
+  
   return escapeHtml(text).replace(/`([^`]+)`/g, `<code style="background:#2d2b38;padding:2px 6px;border-radius:6px;color:#e5c07b;">$1</code>`);
 }

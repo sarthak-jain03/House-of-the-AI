@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { Code2, Sparkles, Eye, MessageSquare, TestTube, Bug, RefreshCw, Download, Send } from 'lucide-react';
+import { Code2, Sparkles, Eye, MessageSquare, TestTube, Bug, RefreshCw, Download, Send, Wrench, X } from 'lucide-react';
 import CodeWhispererMessage from '@/app-components/CodeWhispererMessage.jsx';
 
 
@@ -166,6 +166,8 @@ export default function CodeWhispererRoom() {
   const [inputMessage, setInputMessage] = useState('');
   const chatEndRef = useRef(null);
 
+  const [mobileToolsOpen, setMobileToolsOpen] = useState(false);
+
   useEffect(() => {
     setupCopyFunction();
   }, []);
@@ -213,6 +215,7 @@ export default function CodeWhispererRoom() {
 
     setMessages(prev => [...prev, { role: 'user', content: `[${toolLabel}] on current code snippet` }]);
     setIsLoading(true);
+    setMobileToolsOpen(false);
 
     try {
       const modelOutput = await callModel(prompt);
@@ -307,6 +310,7 @@ export default function CodeWhispererRoom() {
       }]);
     } finally {
       setIsLoading(false);
+      setMobileToolsOpen(false);
     }
   };
 
@@ -327,10 +331,15 @@ export default function CodeWhispererRoom() {
               <Code2 className="w-7 h-7" style={{ color: '#20C997' }} />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-white">The Code Whisperer's Room</h1>
-              <p className="text-gray-400 text-sm">
+              <h1 className="text-2xl font-bold text-white hidden sm:block">The Code Whisperer Room</h1>
+              <h1 className="text-xl font-bold text-white sm:hidden">The Code Whisperer Room</h1>
+              <p className="text-gray-400 text-sm sm:block hidden md:block">
                 Your expert partner for static analysis, code generation, and debugging.
               </p>
+              <p className="text-gray-400 text-sm md:hidden">
+    Your AI coding partner.
+  </p>
+
             </div>
           </div>
 
@@ -339,7 +348,7 @@ export default function CodeWhispererRoom() {
               className="px-5 py-2 text-white rounded-full text-sm font-medium flex items-center gap-2"
               style={{ background: 'linear-gradient(to right, #20C997, #1BA87C)' }}
             >
-              <Sparkles className="w-4 h-4" />
+              
               Explore Our AIs
             </button>
             <button
@@ -353,8 +362,17 @@ export default function CodeWhispererRoom() {
               <Sparkles className="w-4 h-4" />
               New Chat
             </button>
+
+            <button
+              onClick={() => setMobileToolsOpen(true)}
+              className="ml-auto lg:hidden px-3 py-2 text-white rounded-lg bg-white/10 hover:bg-white/20"
+            >
+              <Wrench className="w-5 h-5" />
+            </button>
           </div>
         </div>
+
+        
 
         {/* Chat Messages */}
         <div className="flex-1 overflow-y-auto p-6 space-y-4">
@@ -473,7 +491,63 @@ export default function CodeWhispererRoom() {
             </motion.button>
           </div>
         </div>
+
+
       </div>
+
+
+      {mobileToolsOpen && (
+        <div className="lg:hidden fixed inset-0 z-50 bg-black/50 backdrop-blur-sm">
+          
+          <motion.div
+            initial={{ y: "100%" }}
+            animate={{ y: 0 }}
+            exit={{ y: "100%" }}
+            transition={{ type: "spring", damping: 25 }}
+            className="absolute bottom-0 left-0 right-0 bg-[#0f0f1a] rounded-t-2xl p-6 border-t border-white/10 max-h-[80vh] overflow-y-auto"
+          >
+            {/* Close Button */}
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-white text-lg font-semibold">Tools & Code Editor</h2>
+              <button onClick={() => setMobileToolsOpen(false)}>
+                <X className="w-6 h-6 text-gray-300" />
+              </button>
+            </div>
+
+            {/* Code Input */}
+            <textarea
+              value={codeSnippet}
+              onChange={(e) => setCodeSnippet(e.target.value)}
+              className="w-full h-40 p-3 bg-[#1a1a2e] text-gray-100 rounded-lg border border-white/10 mb-5"
+              placeholder="// Paste code here..."
+            />
+
+            {/* Tools */}
+            <div className="grid grid-cols-2 gap-3 pb-4">
+              {tools.map((tool, i) => (
+                <motion.button
+                  key={i}
+                  onClick={() => handleToolAction(tool.action)}
+                  whileTap={{ scale: 0.97 }}
+                  className={`p-4 rounded-xl border ${tool.color} flex flex-col items-center`}
+                >
+                  <tool.icon className="w-6 h-6" />
+                  <span className="text-xs mt-1">{tool.label}</span>
+                </motion.button>
+              ))}
+
+              <motion.button
+                onClick={() => handleToolAction("export")}
+                whileTap={{ scale: 0.97 }}
+                className="p-4 rounded-xl border bg-green-500/10 text-green-300 flex flex-col items-center"
+              >
+                <Download className="w-6 h-6" />
+                <span className="text-xs mt-1">Export Code</span>
+              </motion.button>
+            </div>
+          </motion.div>
+        </div>
+      )}
     </div>
   );
 }

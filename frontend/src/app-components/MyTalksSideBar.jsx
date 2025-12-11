@@ -2,7 +2,7 @@ import React, { useContext, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { 
   Home, ChevronDown, Code2, Feather, BarChart3, BookOpen, 
-  LogOut, MessageSquare 
+  LogOut, MessageSquare  
 } from 'lucide-react';
 import { AuthContext } from '@/context/AuthContext.jsx';
 
@@ -35,9 +35,9 @@ export default function MyTalksSideBar({ currentAI, onSelectAI }) {
   }, []);
 
   return (
-    <aside className="w-72 min-h-screen bg-[#12121f] border-r border-white/10 flex flex-col">
+    <aside className="w-72 h-screen bg-[#171527] border-r border-white/10 flex flex-col">
 
-      {/* HEADER */}
+      
       <Link to="/" className="flex items-center gap-3 p-4 border-b border-white/10">
         <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-purple-500 to-purple-700 flex items-center justify-center">
           <Home className="w-5 h-5 text-white" />
@@ -48,7 +48,7 @@ export default function MyTalksSideBar({ currentAI, onSelectAI }) {
         </div>
       </Link>
 
-      {/* ---------------- MENU ---------------- */}
+    
       <nav className="flex-1 p-3 overflow-y-auto">
         <div className="mb-2">
           <Link to="/ai" className="flex items-center gap-3 px-3 py-2 text-gray-400 hover:text-white transition-colors duration-300 text-sm">
@@ -131,7 +131,6 @@ export default function MyTalksSideBar({ currentAI, onSelectAI }) {
 
             
 
-            {/* HOME */}
             <button
               onClick={() => navigate('/')}
               className="w-full px-4 py-2 text-sm text-gray-300 hover:bg-white/10 
@@ -151,7 +150,7 @@ export default function MyTalksSideBar({ currentAI, onSelectAI }) {
               New Chat
             </button>
 
-            {/* FEEDBACK */}
+           
             <button
               onClick={() => navigate('/contact')}
               className="w-full px-4 py-2 text-sm text-blue-300 hover:bg-blue-500/10 
@@ -161,7 +160,7 @@ export default function MyTalksSideBar({ currentAI, onSelectAI }) {
               Feedback
             </button>
 
-            {/* LOGOUT */}
+           
             <button
               onClick={() => {
                 logout();

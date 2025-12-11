@@ -152,11 +152,6 @@ export default function DataSageRoom() {
   const pushMessage = useCallback(async (msg) => {
     setMessages((prev) => [...prev, msg]);
 
-    // Auto-save rules:
-    // - If message is charts (type === 'charts'), we DO NOT save the chart images.
-    // - If msg.role === 'user', we mark it as pending for pairing with the next assistant response.
-    // - If msg.role === 'assistant' AND there is a pending user, save pair (pendingUser, assistantContent).
-    // - If msg.role === 'assistant' AND no pending user => save with message: "System"
     try {
       if (msg.type === 'charts') {
         return;
@@ -564,7 +559,8 @@ ${data.eda?.ml_recommendations?.join("\n") || "Dataset ready for use."}
             <BarChart3 className="w-7 h-7 text-blue-400" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-white">The Data Sage's Room</h1>
+            <h1 className="text-2xl font-bold text-white hidden sm:block">The Data Sage's Room</h1>
+            <h1 className="text-xl font-bold text-white sm:hidden">The Data Sage's Room</h1>
             <p className="text-gray-400 text-sm">Transform raw data into insights.</p>
           </div>
         </div>
@@ -642,17 +638,34 @@ ${data.eda?.ml_recommendations?.join("\n") || "Dataset ready for use."}
       </div>
 
       {/* CHAT AREA */}
-      <div className="flex-1 overflow-y-auto p-6 space-y-6">
+      <div
+  className={`flex-1 overflow-y-auto ${
+    messages.length === 0
+      ? "p-0 flex items-center justify-center"
+      : "p-6 space-y-6"
+  }`}
+>
         {messages.length === 0 ? (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-20">
-            <BarChart3 className="w-16 h-16 text-blue-400/50 mx-auto mb-4" />
-            <h2 className="text-xl font-semibold text-white mb-2">
-              Welcome to The Data Sage's Room
-            </h2>
-            <p className="text-gray-400 max-w-md mx-auto">
-              Upload a dataset or ask any data-related question. I can analyze your dataset, summarize insights, generate charts, and answer questions based on your data.
-            </p>
-          </motion.div>
+          <motion.div 
+  initial={{ opacity: 0 }} 
+  animate={{ opacity: 1 }} 
+  className="text-center py-16 sm:py-20"
+>
+ 
+  <BarChart3 className="w-10 h-10 sm:w-16 sm:h-16 text-blue-400/50 mx-auto mb-3 sm:mb-4" />
+
+ 
+  <h2 className="text-lg sm:text-xl font-semibold text-white mb-2">
+    Welcome to The Data Sage's Room
+  </h2>
+
+  
+  <p className="text-gray-400 max-w-md mx-auto text-sm sm:text-base px-2">
+    Upload a dataset or ask any data-related question. I can analyze your dataset, 
+    summarize insights, generate charts, and answer questions based on your data.
+  </p>
+</motion.div>
+
         ) : (
           messages.map((msg, index) => {
             if (msg.type === 'charts') {
