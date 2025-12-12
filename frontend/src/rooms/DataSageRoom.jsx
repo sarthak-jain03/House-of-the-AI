@@ -593,50 +593,57 @@ ${data.eda?.ml_recommendations?.join("\n") || "Dataset ready for use."}
       </div>
 
       {/* ACTION BUTTONS */}
-      <div className="px-6 py-4 border-b border-white/10">
-        <div className="flex items-center gap-3 flex-wrap">
+      <div className="px-4 sm:px-6 py-4 border-b border-white/10">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+
           <button
-            className={`px-4 py-2 rounded-lg text-sm flex items-center gap-2
-              ${isAnalysisReady ? 'bg-blue-500/10 text-blue-400 border border-blue-500/30' : 'bg-gray-700/50 text-gray-500 border border-gray-600'}`}
+            className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm flex items-center gap-2
+              ${isAnalysisReady ? "bg-blue-500/10 text-blue-400 border border-blue-500/30" : "bg-gray-700/50 text-gray-500 border border-gray-600"}`}
             onClick={handleAnalyzeDataset}
             disabled={!isAnalysisReady}
           >
-            <Table className="w-4 h-4" />
+            <Table className="w-3 h-3 sm:w-4 sm:h-4" />
             Analyze Dataset
           </button>
 
           <button
-            className={`px-4 py-2 rounded-lg text-sm flex items-center gap-2
-              ${isReportReady && !edaSummaryClicked ? 'bg-blue-500/10 text-blue-400 border border-blue-500/30' : 'bg-gray-700/50 text-gray-500 border border-gray-600'}`}
-            onClick={handleEdaSummary}
+            className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm flex items-center gap-2
+              ${isReportReady && !edaSummaryClicked ? "bg-blue-500/10 text-blue-400 border border-blue-500/30" : "bg-gray-700/50 text-gray-500 border border-gray-600"}`}
+            onClick={() => {
+              const summary = formatEdaSummary(analysisResult.eda, datasetName);
+              pushMessage({ role: "assistant", content: summary });
+              setEdaSummaryClicked(true);
+            }}
             disabled={!isReportReady || edaSummaryClicked}
           >
-            <Search className="w-4 h-4" />
+            <Search className="w-3 h-3 sm:w-4 sm:h-4" />
             EDA Summary
           </button>
 
           <button
-            className={`px-4 py-2 rounded-lg text-sm flex items-center gap-2
-              ${isReportReady && !chartsClicked ? 'bg-blue-500/10 text-blue-400 border border-blue-500/30' : 'bg-gray-700/50 text-gray-500 border border-gray-600'}`}
-            onClick={handleGenerateChart}
+            className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm flex items-center gap-2
+              ${isReportReady && !chartsClicked ? "bg-blue-500/10 text-blue-400 border border-blue-500/30" : "bg-gray-700/50 text-gray-500 border border-gray-600"}`}
+            onClick={() => {
+              pushMessage({ role: "assistant", type: "charts", charts });
+              setChartsClicked(true);
+            }}
             disabled={!isReportReady || chartsClicked}
           >
-            <PieChart className="w-4 h-4" />
+            <PieChart className="w-3 h-3 sm:w-4 sm:h-4" />
             View Charts ({charts.length})
           </button>
 
           <button
-            className={`px-4 py-2 rounded-lg text-sm flex items-center gap-2
-              ${isReportReady ? 'bg-blue-500/10 text-blue-400 border border-blue-500/30' : 'bg-gray-700/50 text-gray-500 border border-gray-600'}`}
-            onClick={handleDownloadReport}
+            className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm flex items-center gap-2
+              ${isReportReady ? "bg-blue-500/10 text-blue-400 border border-blue-500/30" : "bg-gray-700/50 text-gray-500 border border-gray-600"}`}
             disabled={!isReportReady}
           >
-            <Download className="w-4 h-4" />
+            <Download className="w-3 h-3 sm:w-4 sm:h-4" />
             Download Report
           </button>
+
         </div>
       </div>
-
       {/* CHAT AREA */}
       <div
   className={`flex-1 overflow-y-auto ${

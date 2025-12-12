@@ -132,7 +132,7 @@ export default function StoryWeaverRoom() {
               Craft compelling narratives, scripts, characters, and story arcs.
             </p>
             <p className="text-gray-400 text-sm sm:hidden">
-              Craft stories, scripts, characters, and more.
+              Craft stories, scripts, ideas, and more.
             </p>
           </div>
         </div>
@@ -157,63 +157,35 @@ export default function StoryWeaverRoom() {
       </div>
 
       {/* QUICK ACTIONS */}
-<div className="px-6 py-4 border-b border-white/10">
-  <div className="flex items-center gap-3 flex-wrap">
+ {/* QUICK ACTIONS */}
+      <div className="px-4 sm:px-6 py-4 border-b border-white/10">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
 
-    <button
-      onClick={handleWriteScript}
-      disabled={storyText.trim() === ""}
-      className={`px-4 py-2 rounded-lg text-sm flex items-center gap-2 border 
-        ${storyText.trim() !== "" 
-          ? "bg-orange-500/10 border-orange-500/30 text-orange-400 hover:bg-orange-500/20" 
-          : "bg-gray-800/40 border-gray-700 text-gray-600 cursor-not-allowed"
-        }`}
-    >
-      <Film className="w-4 h-4" />
-      Write Script
-    </button>
+          {/* Buttons with smaller padding on mobile */}
+          {[
+            ["Write Script", <Film className="w-4 h-4" />],
+            ["Add Character", <Users className="w-4 h-4" />],
+            ["Plot Outline", <Scroll className="w-4 h-4" />],
+            ["Alternative Directions", <GitBranch className="w-4 h-4" />],
+          ].map(([label, icon], index) => (
+            <button
+              key={index}
+              onClick={() => triggerRequest(label)}
+              disabled={storyText.trim() === ""}
+              className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm flex items-center gap-2 border 
+                ${
+                  storyText.trim() !== ""
+                    ? "bg-orange-500/10 border-orange-500/30 text-orange-400 hover:bg-orange-500/20"
+                    : "bg-gray-800/40 border-gray-700 text-gray-600 cursor-not-allowed"
+                }`}
+            >
+              {icon}
+              {label}
+            </button>
+          ))}
 
-    <button
-      onClick={handleAddCharacter}
-      disabled={storyText.trim() === ""}
-      className={`px-4 py-2 rounded-lg text-sm flex items-center gap-2 border
-        ${storyText.trim() !== "" 
-          ? "bg-orange-500/10 border-orange-500/30 text-orange-400 hover:bg-orange-500/20" 
-          : "bg-gray-800/40 border-gray-700 text-gray-600 cursor-not-allowed"
-        }`}
-    >
-      <Users className="w-4 h-4" />
-      Add Character
-    </button>
-
-    <button
-      onClick={handlePlotOutline}
-      disabled={storyText.trim() === ""}
-      className={`px-4 py-2 rounded-lg text-sm flex items-center gap-2 border
-        ${storyText.trim() !== "" 
-          ? "bg-orange-500/10 border-orange-500/30 text-orange-400 hover:bg-orange-500/20" 
-          : "bg-gray-800/40 border-gray-700 text-gray-600 cursor-not-allowed"
-        }`}
-    >
-      <Scroll className="w-4 h-4" />
-      Plot Outline
-    </button>
-
-    <button
-      onClick={handleAltDirections}
-      disabled={storyText.trim() === ""}
-      className={`px-4 py-2 rounded-lg text-sm flex items-center gap-2 border
-        ${storyText.trim() !== "" 
-          ? "bg-orange-500/10 border-orange-500/30 text-orange-400 hover:bg-orange-500/20" 
-          : "bg-gray-800/40 border-gray-700 text-gray-600 cursor-not-allowed"
-        }`}
-    >
-      <GitBranch className="w-4 h-4" />
-      Alternative Directions
-    </button>
-
-  </div>
-</div>
+        </div>
+      </div>
 
 
       {/* CHAT AREA */}

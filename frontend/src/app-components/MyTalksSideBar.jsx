@@ -5,7 +5,7 @@ import {
   LogOut, MessageSquare  
 } from 'lucide-react';
 import { AuthContext } from '@/context/AuthContext.jsx';
-
+import logo from "@/assets/logo3.png";
 const aiList = [
   { type: 'code_whisperer', title: 'The Code Whisperer', description: 'Assists in writing and reviewing code', icon: Code2, color: 'text-teal-400' },
   { type: 'poet', title: 'The Poet', description: 'Drafts imaginative stories and verses', icon: Feather, color: 'text-purple-400' },
@@ -39,9 +39,7 @@ export default function MyTalksSideBar({ currentAI, onSelectAI }) {
 
       
       <Link to="/" className="flex items-center gap-3 p-4 border-b border-white/10">
-        <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-purple-500 to-purple-700 flex items-center justify-center">
-          <Home className="w-5 h-5 text-white" />
-        </div>
+        <img src={logo} alt="" className="w-9 h-9 sm:w-11 sm:h-11 rounded-lg object-cover shadow-md shadow-purple-500/20" />
         <div>
           <h1 className="text-white font-bold text-sm leading-tight">House of the AI</h1>
           <p className="text-purple-300/60 text-xs">Where AI Meets Intelligence</p>

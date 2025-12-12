@@ -70,7 +70,7 @@ export default function StoryWeaverTalkRoom() {
             from-orange-500/20 to-orange-600/20 
             border border-orange-500/30 items-center justify-center">
             
-            <BookOpen className="w-5 h-5 sm:w-7 sm:h-7 text-teal-400" />
+            <BookOpen className="w-5 h-5 sm:w-7 sm:h-7 text-orange-300" />
           </div>
           <div>
             <h1 className="text-2xl font-bold text-white hidden sm:block">The Story Weaver's Talk Room</h1>

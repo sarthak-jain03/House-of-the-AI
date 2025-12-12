@@ -52,7 +52,7 @@ export default function PoetTalkRoom() {
           <div className="flex w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-gradient-to-br from-purple-500/20 
             to-purple-600/20 border border-purple-500/30 items-center justify-center">
             
-            <Feather className="w-5 h-5 sm:w-7 sm:h-7 text-teal-400" />
+            <Feather className="w-5 h-5 sm:w-7 sm:h-7 text-purple-400" />
           </div>
           <div>
             <h1 className="text-2xl font-bold text-white hidden sm:block">The Poet's Talk Room</h1>

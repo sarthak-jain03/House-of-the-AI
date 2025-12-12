@@ -10,6 +10,7 @@ import {
   X
 } from "lucide-react";
 import { AuthContext } from "@/context/AuthContext.jsx";
+import logo from "@/assets/logo3.png";  
 
 export default function Header() {
   const { user, logout } = useContext(AuthContext);
@@ -41,15 +42,15 @@ export default function Header() {
   return (
     <header className="w-full bg-gradient-to-r from-[#1a1535] via-[#121425] to-[#0c0f1a] border-b border-white/5">
       <div className="w-full px-4 sm:px-6 py-4 flex items-center justify-between">
-
-        {/* Logo */}
+         
         <Link to="/" className="flex items-center gap-3">
-          <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-gradient-to-br from-purple-500 to-purple-700 flex items-center justify-center shadow-md shadow-purple-500/30">
-            <Home className="w-5 h-5 text-white" />
-          </div>
-
+          <img
+            src={logo}
+            alt="House of the AI Logo"
+            className="w-9 h-9 sm:w-11 sm:h-11 rounded-lg object-cover shadow-md shadow-purple-500/20"
+          />
           {/* Mobile title */}
-          <div className="md:hidden lg:hidden text-white font-bold text-lg leading-tight">
+          <div className="md:hidden lg:hidden text-white font-bold text-md leading-tight ml-[-8px]">
             House of the AI
           </div>
 

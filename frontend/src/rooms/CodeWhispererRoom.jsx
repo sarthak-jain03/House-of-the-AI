@@ -360,7 +360,7 @@ export default function CodeWhispererRoom() {
               }])}
             >
               <Sparkles className="w-4 h-4" />
-              New Chat
+              New 
             </button>
 
             <button
