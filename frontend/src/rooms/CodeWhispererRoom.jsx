@@ -55,17 +55,16 @@ You are a senior code reviewer. Provide a complete, structured review with the f
 4) Performance concerns
 5) Security vulnerabilities
 6) Best practices violations
-7) Concrete suggestions and a short improved code example
-
-Include the improved code inside triple backticks. Keep explanations concise but precise.
+Keep explanations short but precise.
+Don't provide code changes, only the review.
 
 Code to review:
 ${wrapCode(code, 'cpp')}
 `,
 
   explain: (code) => `
-You are an expert programming instructor. Explain the code thoroughly and clearly:
-Povide a deailed explanation of the code in a simple way.
+You are an expert programming instructor. Explain the code in easy way, short and precise:
+Povide the explanation in a simple way.
 Don't display the code again, just explain it.
 
 Code:
@@ -73,12 +72,11 @@ ${wrapCode(code, 'cpp')}
 `,
 
   test: (code) => `
-You are an experienced test engineer. Generate comprehensive tests for the provided C++ code:
+You are an experienced test engineer. Generate comprehensive tests for the provided code in the same language asked by the user:
 - Unit tests for each function
 - Edge and boundary cases
 - Negative/error cases
 - Integration scenarios if applicable
-Return runnable C++ test code (plain, compilable) inside triple backticks.
 
 Code to test:
 ${wrapCode(code, 'cpp')}
@@ -90,8 +88,6 @@ You are a debugging expert. Find and fix all bugs in the code:
 - Show the corrected code with fixes applied
 - Explain why the fixes solve the issue
 
-Return the corrected, full code inside triple backticks.
-
 Code to fix:
 ${wrapCode(code, 'cpp')}
 `,
@@ -100,10 +96,9 @@ ${wrapCode(code, 'cpp')}
 You are an expert refactoring engineer. Refactor the code to improve:
 - Readability
 - Naming and structure
-- Performance and memory usage (where applicable)
 - Modularity and maintainability
 
-Return a short summary of changes and the refactored code inside triple backticks.
+Return a short summary of changes.
 
 Code to refactor:
 ${wrapCode(code, 'cpp')}

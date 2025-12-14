@@ -452,7 +452,7 @@ export default function DataSageMessage({ message, isUser, confidence }) {
         {!isUser && confidence && (
           <div className="mt-2">
             <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-orange-500/20 border border-orange-500/30 rounded-full text-xs text-orange-400 font-medium">
-              Expert Confidence: {confidence}%
+              Confidence: {confidence}%
             </span>
           </div>
         )}

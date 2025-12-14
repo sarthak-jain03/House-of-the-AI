@@ -4,7 +4,7 @@ import json
 import base64
 import tempfile
 import traceback
-from datetime import datetime, timezone
+from datetime import datetime
 
 from flask import Flask, request, jsonify, send_file
 from flask_cors import CORS
@@ -12,7 +12,7 @@ from flask_cors import CORS
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-plt.switch_backend('Agg')
+plt.switch_backend("Agg")
 import seaborn as sns
 from fpdf import FPDF
 
@@ -22,44 +22,80 @@ load_dotenv()
 
 
 
-
 app = Flask(__name__)
 CORS(app, origins=["*"], supports_credentials=True)
 
-
 FIREWORKS_API_KEY = os.getenv("FIREWORKS_API_KEY")
-FIREWORKS_URL = os.getenv("FIREWORKS_URL")
+FIREWORKS_URL = os.getenv(
+    "FIREWORKS_URL",
+    "https://api.fireworks.ai/inference/v1/chat/completions"
+)
 
-FIREWORKS_MODEL = os.getenv("FIREWORKS_MODEL")
+if not FIREWORKS_API_KEY:
+    raise RuntimeError("API_KEY missing in environment")
 
 
 MODELS = {
-    "poet": os.getenv("POET_MODEL"),
-    "coder": os.getenv("CODER_MODEL"),
-    "story": os.getenv("STORY_MODEL"),
-    "analyzer": os.getenv("DATASET_ANALYZER_MODEL")
+    "poet": "accounts/fireworks/models/deepseek-v3p2",
+    "coder": "accounts/fireworks/models/deepseek-v3p2",
+    "story": "accounts/fireworks/models/deepseek-v3p2",
+    "analyzer": "accounts/fireworks/models/deepseek-v3p2"
 }
 
-clients = {name: None for name in MODELS}
-print("[OK] Model Routing Initialized.")
+print("[OK] Fireworks Model Routing Initialized")
 
 
-
-POET_PROMPT = """
-You are The Poet. Always respond in artistic, emotional poetry...
-"""
-
+POET_PROMPT = "You are The Poet. Respond ONLY in expressive poetry."
 CODE_PROMPT = """
-    "You are **The Code Whisperer**, a master of programming. "
-    "You respond with clean, minimal, and highly precise code. "
-    "No unnecessary classes, no repeated boilerplate, no fluff. "
-    "Give the simplest working code and brief, accurate explanations only when needed. "
-    "Never add storytelling or poetic text. Remain purely technical."
+You are The Code Whisperer.
+
+IMPORTANT RESPONSE CONSTRAINTS:
+- Entire response MUST fit within ~900–1000 tokens.
+- NEVER cut code mid-block.
+- NEVER omit closing braces, functions, or logic.
+- If code is long, prefer clarity and minimalism.
+
+CODE RULES:
+- Return ONLY what is necessary.
+- Use fenced code blocks.
+- If explanation is needed, keep it brief.
+- Prefer a single-file, complete, working solution.
+- No storytelling, no filler.
+
+If the solution risks exceeding the limit:
+→ simplify
+→ reduce comments
+→ shorten variable names
+→ NEVER truncate logic
+
+Now produce the complete solution.
+"""
+STORY_PROMPT = """
+You are The Story Weaver.
+
+IMPORTANT RESPONSE CONSTRAINTS:
+- Entire story must be complete within ~900–1000 tokens.
+- Plan beginning, middle, and ending before writing.
+- Reserve at least 15% of length for the ending.
+- NEVER stop mid-sentence or mid-paragraph.
+- If the story grows long, compress the middle — NEVER truncate the ending.
+
+STORY RULES:
+- Write a single, self-contained story.
+- Use a clear three-act structure:
+  1) Setup
+  2) Escalation
+  3) Resolution
+- End with a strong, definitive final paragraph.
+- Do NOT ask to continue. Do NOT split into parts.
+
+Tone: immersive, vivid, cinematic.
+Length target: ~700–900 tokens.
+
+Now write the story.
+
 """
 
-STORY_PROMPT = """
-You are The Story Weaver. Produce immersive stories, scripts, outlines...
-"""
 
 DATASET_PROMPT = """
 You are The Dataset Oracle. Provide structured insights: summary, patterns,
@@ -73,76 +109,59 @@ chat_history = {
     "story": []
 }
 
-_global_data_store = {
-    "name": None,
-    "df": None,
-    "eda": None,
-    "insights": None
-}
-
 _chart_store = {}
+_global_data_store = {"df": None, "eda": None, "name": None}
 
 
-def hf_chat(client_unused, system_prompt, user_prompt):
-    
-    if not FIREWORKS_API_KEY:
-        return "[ERROR] FIREWORKS_API_KEY missing."
 
+def fireworks_chat(model, messages, temperature=0.5, max_tokens=1500):
     headers = {
-        "Content-Type": "application/json",
-        "Accept": "application/json",
-        "Authorization": f"Bearer {FIREWORKS_API_KEY}"
+        "Authorization": f"Bearer {FIREWORKS_API_KEY}",
+        "Content-Type": "application/json"
     }
 
     payload = {
-        "model": FIREWORKS_MODEL,
-        "messages": [
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": user_prompt}
-        ],
-        "temperature": 0.2,
-        "max_tokens": 500
+        "model": model,
+        "messages": messages,
+        "temperature": temperature,
+        "max_tokens": max_tokens
     }
 
     try:
-        response = requests.post(FIREWORKS_URL, headers=headers, json=payload, timeout=40)
-        response.raise_for_status()
-        data = response.json()
-        return data["choices"][0]["message"]["content"]
-
+        res = requests.post(FIREWORKS_URL, headers=headers, json=payload, timeout=60)
+        res.raise_for_status()
+        msg = res.json()["choices"][0]["message"]
+        return (msg.get("content") or msg.get("reasoning_content") or "").strip()
     except Exception as e:
         print("FIREWORKS ERROR:", e)
-        return f"[MODEL ERROR] {str(e)}"
+        return "[ERROR] Model failed to respond."
 
 
 
-def process_chat(user_prompt, key, model_client, persona):
+def process_chat(user_prompt, key, persona_prompt):
     history = chat_history[key]
-    messages = [{"role": "system", "content": persona}]
-    # reconstruct history
+
+    messages = [{"role": "system", "content": persona_prompt}]
+
+    # inject memory
     for i in range(0, len(history), 2):
         try:
             messages.append({"role": "user", "content": history[i]})
             messages.append({"role": "assistant", "content": history[i+1]})
-        except Exception:
+        except IndexError:
             pass
 
-    # add new prompt
     messages.append({"role": "user", "content": user_prompt})
 
-    try:
-        user_concat = "\n".join([m["content"] for m in messages if m["role"] == "user"])
-        output = hf_chat(None, persona, user_concat)
-    except Exception as e:
-        output = "[ERROR] " + str(e)
+    output = fireworks_chat(
+        model=MODELS[key],
+        messages=messages,
+        temperature=0.2
+    )
 
-    # save to history
-    history.append(user_prompt)
-    history.append(output)
-    chat_history[key] = history
-
+    history.extend([user_prompt, output])
+    chat_history[key] = history[-12:] 
     return output
-
 
 
 def read_uploaded_file_storage(file_storage):
@@ -157,26 +176,26 @@ def parse_dataset_text(text):
     from io import StringIO
     t = text.strip()
 
-    # try json
+ 
     try:
         if t.startswith("{") or t.startswith("["):
             return pd.read_json(StringIO(t))
     except Exception:
         pass
 
-    # try csv
+    
     try:
         return pd.read_csv(StringIO(t))
     except Exception:
         pass
 
-    # try tab separated
+ 
     try:
         return pd.read_csv(StringIO(t), sep="\t")
     except Exception:
         pass
 
-    # fallback: each line as a row under 'text'
+   
     return pd.DataFrame({"text": t.splitlines()})
 
 
@@ -200,7 +219,7 @@ def compute_eda(df):
     else:
         eda["correlation"] = {}
 
-    # outliers
+    
     outliers = {}
     for c in num_cols:
         s = df[c].dropna()
@@ -222,7 +241,6 @@ def compute_advanced_eda(df):
     num_cols = df.select_dtypes(include=[np.number]).columns.tolist()
     cat_cols = df.select_dtypes(include=['object', 'category']).columns.tolist()
 
-    # NUMERICAL DISTRIBUTION ANALYSIS
     distribution = []
     for col in num_cols:
         s = df[col].dropna()
@@ -255,7 +273,6 @@ def compute_advanced_eda(df):
     analysis["distribution_summary"] = distribution
     
 
-    # CATEGORICAL ANALYSIS
     categorical_summary = []
     for col in cat_cols:
         col_series = df[col].astype(object).fillna("")
@@ -273,7 +290,7 @@ def compute_advanced_eda(df):
 
     analysis["categorical_summary"] = categorical_summary
 
-    # TOP CORRELATIONS
+   
     corrs = []
     if len(num_cols) >= 2:
         corr_matrix = df[num_cols].corr().abs()
@@ -289,7 +306,7 @@ def compute_advanced_eda(df):
         corrs = sorted(corrs, key=lambda x: x["value"], reverse=True)[:15]
     analysis["correlation_top"] = corrs
 
-    # QUALITY FLAGS
+   
     flags = []
     dup = int(df.duplicated().sum())
     if dup > 0:
@@ -310,7 +327,7 @@ def compute_advanced_eda(df):
 
     analysis["quality_flags"] = flags
 
-    # ML RECOMMENDATIONS
+    
     rec = []
     if len(cat_cols) > 0:
         rec.append("Apply One Hot Encoding or target encoding for categorical variables (watch high-cardinality columns).")
@@ -382,7 +399,7 @@ def generate_charts(df):
         except Exception:
             pass
 
-    # correlation heatmap
+    
     if len(num) >= 2:
         try:
             fig, ax = plt.subplots(figsize=(6, 5))
@@ -393,7 +410,7 @@ def generate_charts(df):
         except Exception:
             pass
 
-    # top categorical frequency chart
+    
     if len(cat) >= 1:
         try:
             c0 = cat[0]
@@ -429,7 +446,7 @@ def analyze_endpoint():
         
         df_clean = auto_clean_dataframe(df)
 
-        #deterministic EDA
+       
         eda = compute_eda(df_clean)
         advanced = compute_advanced_eda(df_clean)
         eda.update(advanced)
@@ -491,7 +508,7 @@ def chat_with_data():
 
         try:
             payload = {
-                "model": FIREWORKS_MODEL,
+                "model": MODELS["analyzer"],
                 "messages": [
                     {"role": "system", "content": system_prompt},
                     {"role": "user", "content": user_prompt}
@@ -576,73 +593,63 @@ def export_pdf():
     except Exception as e:
         traceback.print_exc()
         return jsonify({"error": str(e)})
+    
+
+
+@app.route("/story-weaver", methods=["POST"])
+def story_weaver():
+    data = request.json or {}
+    action = data.get("action", "continue_story")
+    story = data.get("story", "")
+    prompt = data.get("prompt", "")
+
+    if action == "write_script":
+        instruction = f"Convert to screenplay:\n\n{story}\n\n{prompt}"
+    elif action == "add_character":
+        instruction = f"Add a new character and rewrite:\n\n{story}\n\n{prompt}"
+    elif action == "plot_outline":
+        instruction = f"Create a plot outline:\n\n{story}\n\n{prompt}"
+    elif action == "alt_directions":
+        instruction = f"Generate alternate story paths:\n\n{story}\n\n{prompt}"
+    else:
+        instruction = f"Continue the story:\n\n{story}\n\n{prompt}"
+
+    out = fireworks_chat(
+        model=MODELS["story"],
+        messages=[
+            {"role": "system", "content": STORY_PROMPT},
+            {"role": "user", "content": instruction}
+        ],
+        temperature=0.4,
+        max_tokens=1500
+    )
+
+    return jsonify({
+        "success": True,
+        "response": out,
+        "updated_story": out,
+        "confidence": "95%"
+    })
 
 
 
 @app.route("/poet_chat", methods=["POST"])
 def poet_chat():
     text = request.json.get("prompt", "")
-    out = process_chat(text, "poet", clients["poet"], POET_PROMPT)
-    return jsonify({"response": out, "confidence": "95"})
+    out = process_chat(text, "poet", POET_PROMPT)
+    return jsonify({"response": out, "confidence": "95%"})
 
-
-
-@app.route('/code_chat', methods=['POST'])
+@app.route("/code_chat", methods=["POST"])
 def code_chat():
-    """Endpoint for The Code Whisperer persona."""
-    data = request.get_json()
-    user_prompt = data.get("prompt")
-
-    if not user_prompt:
-        return jsonify({"error": "No prompt provided"}), 400
-
-    try:
-        response = process_chat(
-            user_prompt, "coder", clients["coder"], CODE_PROMPT
-        )
-        return jsonify({"response": response, "confidence": "98"}) 
-    except Exception as e:
-        print("Coder error:", e)
-        return jsonify({
-            "response": "Code structure corrupted. Server error.",
-            "confidence": "0"
-        }), 500
+    text = request.json.get("prompt", "")
+    out = process_chat(text, "coder", CODE_PROMPT)
+    return jsonify({"response": out, "confidence": "98%"})
 
 @app.route("/story_weaver_chat", methods=["POST"])
-def story_weaver_chat():
+def story_chat():
     text = request.json.get("prompt", "")
-    out = process_chat(text, "story", clients["story"], STORY_PROMPT)
-    return jsonify({"response": out, "confidence": "95"})
-
-
-
-@app.route("/story-weaver", methods=["POST"])
-def story_weaver():
-    data = request.json
-    action = data.get("action", "continue_story")
-    story = data.get("story", "")
-    prompt = data.get("prompt", "")
-
-    if action == "write_script":
-        instruction = f"Convert to screenplay:\n{story}\n\n{prompt}"
-    elif action == "add_character":
-        instruction = f"Add character and rewrite:\n{story}\n\n{prompt}"
-    elif action == "plot_outline":
-        instruction = f"Create plot outline:\n{story}\n\n{prompt}"
-    elif action == "alt_directions":
-        instruction = f"Alternative story paths:\n{story}\n\n{prompt}"
-    else:
-        instruction = f"Continue story:\n{story}\n\n{prompt}"
-
-    out = hf_chat(None, STORY_PROMPT, instruction)
-    return jsonify({
-        "success": True,
-        "response": out,
-        "updated_story": out,
-        "confidence": 95
-    })
-
-
+    out = process_chat(text, "story", STORY_PROMPT)
+    return jsonify({"response": out, "confidence": "95%"})
 
 
 # if __name__ == "__main__":

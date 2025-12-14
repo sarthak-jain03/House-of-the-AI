@@ -432,7 +432,7 @@ export default function StoryWeaverMessage({ message, isUser, confidence }) {
       </motion.div>
 
       {/* Message */}
-      <div className={`max-w-[85%] ${isUser ? 'text-right' : ''}`}>
+      <div className={`max-w-[85%] ${isUser ? 'text-left' : ''}`}>
         {isUser ? (
           // User message 
           <motion.div

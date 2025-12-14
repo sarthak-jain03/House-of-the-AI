@@ -126,7 +126,7 @@ const formatEdaSummary = (eda, name) => {
 
   return summary;
 };
- 
+
 
 export default function DataSageRoom() {
   const [messages, setMessages] = useState([]);
@@ -142,13 +142,13 @@ export default function DataSageRoom() {
 
   const [selectedChart, setSelectedChart] = useState(null);
 
- 
+
   const pendingUserForSaveRef = useRef(null);
 
-  
+
   const chatEndRef = useRef(null);
 
-  
+
   const pushMessage = useCallback(async (msg) => {
     setMessages((prev) => [...prev, msg]);
 
@@ -158,12 +158,12 @@ export default function DataSageRoom() {
       }
 
       if (msg.role === 'user') {
-        
+
         pendingUserForSaveRef.current = msg.content;
         return;
       }
 
-     
+
       const pendingUser = pendingUserForSaveRef.current;
       if (pendingUser) {
         await saveChatToDB(pendingUser, typeof msg.content === 'string' ? msg.content : JSON.stringify(msg));
@@ -178,11 +178,11 @@ export default function DataSageRoom() {
 
 
   const handleSend = async (message) => {
-    
+
     await pushMessage({ role: 'user', content: message });
 
     if (!analysisResult) {
-   
+
       await pushMessage({
         role: 'assistant',
         content: "Please run **Analyze Dataset** first."
@@ -234,7 +234,7 @@ export default function DataSageRoom() {
     setEdaSummaryClicked(false);
     setChartsClicked(false);
 
-    
+
     await pushMessage({ role: 'user', content: `File uploaded: ${file.name}` });
 
 
@@ -261,7 +261,7 @@ export default function DataSageRoom() {
   const handleAnalyzeDataset = useCallback(async () => {
     if (!datasetFile) return;
 
-    
+
     await pushMessage({ role: 'user', content: "Analyze dataset" });
 
     setIsLoading(true);
@@ -283,7 +283,7 @@ export default function DataSageRoom() {
         setChartsClicked(false);
 
         const analysisText =
-`# 🔍 Advanced Dataset Analysis: **${datasetName}**
+          `# 🔍 Advanced Dataset Analysis: **${datasetName}**
 
 ## 🧮 Basic Structure
 - **Rows:** ${data.eda?.rows ?? 'N/A'}
@@ -293,44 +293,44 @@ export default function DataSageRoom() {
 
 ## 🕳 Missing Value Summary
 ${Object.entries(data.eda?.missing_values || {})
-  .map(([col, v]) => `- ${col}: ${v}`)
-  .join("\n") || "No missing values."}
+            .map(([col, v]) => `- ${col}: ${v}`)
+            .join("\n") || "No missing values."}
 
 ---
 
 ## 🏷 Data Types
 ${Object.entries(data.eda?.types || {})
-  .map(([col, v]) => `- **${col}** → \`${v}\``)
-  .join("\n")}
+            .map(([col, v]) => `- **${col}** → \`${v}\``)
+            .join("\n")}
 
 ---
 
 ## 📊 Summary Statistics
 ${Object.keys(data.eda?.summary || {})
-  .map(col => {
-    let s = data.eda.summary[col];
-    return `### 🔹 ${col}
+            .map(col => {
+              let s = data.eda.summary[col];
+              return `### 🔹 ${col}
 - Mean: ${s.mean}
 - Std: ${s.std}
 - Min: ${s.min}
 - Max: ${s.max}`;
-  })
-  .join("\n\n")}
+            })
+            .join("\n\n")}
 
 ---
 
 ## ⚠ Outliers Detected
 ${Object.entries(data.eda?.outliers_count || {})
-  .filter(([col, v]) => v > 0)
-  .map(([col, v]) => `- ${col}: ${v} outliers`)
-  .join("\n") || "No outliers detected."}
+            .filter(([col, v]) => v > 0)
+            .map(([col, v]) => `- ${col}: ${v} outliers`)
+            .join("\n") || "No outliers detected."}
 
 ---
 
 ## 🔗 Correlation Insights
 ${data.eda?.correlation_top
-  ?.map(c => `- **${c.pair}** → correlation: ${c.value}`)
-  .join("\n") || "No significant correlation findings."}
+            ?.map(c => `- **${c.pair}** → correlation: ${c.value}`)
+            .join("\n") || "No significant correlation findings."}
 
 ---
 
@@ -341,20 +341,20 @@ ${data.eda?.target_insights || "No target column detected."}
 
 ## 📈 Distribution Analysis
 ${data.eda?.distribution_summary
-  ?.map(d => `### ${d.column}
+            ?.map(d => `### ${d.column}
 - Skewness: ${d.skew}
 - Kurtosis: ${d.kurtosis}
 - Recommended Fix: ${d.fix}`)
-  .join("\n\n") || "No numerical columns analyzed."}
+            .join("\n\n") || "No numerical columns analyzed."}
 
 ---
 
 ## 🏷 Categorical Insights
 ${data.eda?.categorical_summary
-  ?.map(c => `### ${c.column}
+            ?.map(c => `### ${c.column}
 - Unique Values: ${c.unique}
 - Rare Labels: ${c.rare_labels?.join(", ")}`)
-  .join("\n\n") || "No categorical columns found."}
+            .join("\n\n") || "No categorical columns found."}
 
 ---
 
@@ -389,11 +389,11 @@ ${data.eda?.ml_recommendations?.join("\n") || "Dataset ready for use."}
     }
   }, [datasetFile, datasetName, pushMessage]);
 
-  
+
   const handleEdaSummary = useCallback(async () => {
     if (!analysisResult || edaSummaryClicked) return;
 
-    
+
     await pushMessage({ role: 'user', content: "Show EDA Summary" });
 
     const summaryText = formatEdaSummary(
@@ -401,7 +401,7 @@ ${data.eda?.ml_recommendations?.join("\n") || "Dataset ready for use."}
       datasetName || analysisResult.dataset_name || "Dataset"
     );
 
-    
+
     await pushMessage({
       role: 'assistant',
       content: summaryText,
@@ -411,11 +411,11 @@ ${data.eda?.ml_recommendations?.join("\n") || "Dataset ready for use."}
     setEdaSummaryClicked(true);
   }, [analysisResult, edaSummaryClicked, datasetName, pushMessage]);
 
-  
+
   const handleGenerateChart = useCallback(async () => {
     if (!analysisResult || chartsClicked) return;
 
-    
+
     await pushMessage({ role: 'user', content: "View dataset charts" });
 
     const responseText = `Displaying ${charts.length} visual charts.`;
@@ -435,7 +435,7 @@ ${data.eda?.ml_recommendations?.join("\n") || "Dataset ready for use."}
     setChartsClicked(true);
   }, [analysisResult, chartsClicked, charts, pushMessage]);
 
- 
+
 
 
   const handleDownloadReport = useCallback(async () => {
@@ -456,7 +456,7 @@ ${data.eda?.ml_recommendations?.join("\n") || "Dataset ready for use."}
       if (charts && charts.length > 0) {
         chartsHtml = charts
           .map((c, idx) => {
-            
+
             if (c.b64) {
               return `<div style="margin-bottom:18px;">
                         <h4 style="margin-bottom:6px;">${escapeHtml(c.title || `Chart ${idx + 1}`)}</h4>
@@ -532,7 +532,7 @@ ${data.eda?.ml_recommendations?.join("\n") || "Dataset ready for use."}
   const isReportReady = useMemo(() => !!analysisResult, [analysisResult]);
   const isChatReady = useMemo(() => !!datasetFile, [datasetFile]);
 
-  
+
   useEffect(() => {
     const t = setTimeout(() => {
       chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -635,8 +635,9 @@ ${data.eda?.ml_recommendations?.join("\n") || "Dataset ready for use."}
 
           <button
             className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm flex items-center gap-2
-              ${isReportReady ? "bg-blue-500/10 text-blue-400 border border-blue-500/30" : "bg-gray-700/50 text-gray-500 border border-gray-600"}`}
+    ${isReportReady ? "bg-blue-500/10 text-blue-400 border border-blue-500/30" : "bg-gray-700/50 text-gray-500 border border-gray-600"}`}
             disabled={!isReportReady}
+            onClick={handleDownloadReport}
           >
             <Download className="w-3 h-3 sm:w-4 sm:h-4" />
             Download Report
@@ -646,32 +647,31 @@ ${data.eda?.ml_recommendations?.join("\n") || "Dataset ready for use."}
       </div>
       {/* CHAT AREA */}
       <div
-  className={`flex-1 overflow-y-auto ${
-    messages.length === 0
-      ? "p-0 flex items-center justify-center"
-      : "p-6 space-y-6"
-  }`}
->
+        className={`flex-1 overflow-y-auto ${messages.length === 0
+            ? "p-0 flex items-center justify-center"
+            : "p-6 space-y-6"
+          }`}
+      >
         {messages.length === 0 ? (
-          <motion.div 
-  initial={{ opacity: 0 }} 
-  animate={{ opacity: 1 }} 
-  className="text-center py-16 sm:py-20"
->
- 
-  <BarChart3 className="w-10 h-10 sm:w-16 sm:h-16 text-blue-400/50 mx-auto mb-3 sm:mb-4" />
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="text-center py-16 sm:py-20"
+          >
 
- 
-  <h2 className="text-lg sm:text-xl font-semibold text-white mb-2">
-    Welcome to The Data Sage's Room
-  </h2>
+            <BarChart3 className="w-10 h-10 sm:w-16 sm:h-16 text-blue-400/50 mx-auto mb-3 sm:mb-4" />
 
-  
-  <p className="text-gray-400 max-w-md mx-auto text-sm sm:text-base px-2">
-    Upload a dataset or ask any data-related question. I can analyze your dataset, 
-    summarize insights, generate charts, and answer questions based on your data.
-  </p>
-</motion.div>
+
+            <h2 className="text-lg sm:text-xl font-semibold text-white mb-2">
+              Welcome to The Data Sage's Room
+            </h2>
+
+
+            <p className="text-gray-400 max-w-md mx-auto text-sm sm:text-base px-2">
+              Upload a dataset or ask any data-related question. I can analyze your dataset,
+              summarize insights, generate charts, and answer questions based on your data.
+            </p>
+          </motion.div>
 
         ) : (
           messages.map((msg, index) => {
