@@ -160,7 +160,7 @@ This AI acts like your co-writer for novels, films, or short stories.
 ### 1️⃣ Clone the Repo
 ```bash
 git clone https://github.com/sarthak-jain03/House-of-the-AI.git
-cd house-of-the-ai
+cd House-of-the-AI
 ```
 
 ### 2️⃣ Install Dependencies
