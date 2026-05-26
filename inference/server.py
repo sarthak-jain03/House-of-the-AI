@@ -36,10 +36,10 @@ if not FIREWORKS_API_KEY:
 
 
 MODELS = {
-    "poet": "accounts/fireworks/models/deepseek-v3p2",
-    "coder": "accounts/fireworks/models/deepseek-v3p2",
-    "story": "accounts/fireworks/models/deepseek-v3p2",
-    "analyzer": "accounts/fireworks/models/deepseek-v3p2"
+    "poet": "accounts/fireworks/models/llama-v3p1-8b-instruct",
+    "coder": "accounts/fireworks/models/llama-v3p1-8b-instruct",
+    "story": "accounts/fireworks/models/llama-v3p1-8b-instruct",
+    "analyzer": "accounts/fireworks/models/llama-v3p1-8b-instruct"
 }
 
 print("[OK] Fireworks Model Routing Initialized")
