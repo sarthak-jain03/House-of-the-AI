@@ -21,6 +21,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 
+
 app = Flask(__name__)
 CORS(app, origins=["*"], supports_credentials=True)
 
@@ -35,19 +36,16 @@ if not FIREWORKS_API_KEY:
 
 
 MODELS = {
-    "poet":     "accounts/fireworks/models/deepseek-v3",
-    "coder":    "accounts/fireworks/models/deepseek-v3",
-    "story":    "accounts/fireworks/models/deepseek-v3",
-    "analyzer": "accounts/fireworks/models/deepseek-v3"
+    "poet": "accounts/fireworks/models/deepseek-v4-flash",
+    "coder": "accounts/fireworks/models/deepseek-v4-flash",
+    "story": "accounts/fireworks/models/deepseek-v4-flash",
+    "analyzer": "accounts/fireworks/models/deepseek-v4-flash"
 }
 
-print("[OK] Fireworks Model Routing Initialized (deepseek-v3)")
-
-
+print("[OK] Fireworks Model Routing Initialized (deepseek-v4-flash)")
 
 
 POET_PROMPT = "You are The Poet. Respond ONLY in expressive poetry."
-
 CODE_PROMPT = """
 You are The Code Whisperer.
 
@@ -72,15 +70,16 @@ If the solution risks exceeding the limit:
 
 Now produce the complete solution.
 """
-
 STORY_PROMPT = """
 You are The Story Weaver.
 
 IMPORTANT RESPONSE CONSTRAINTS:
-- Entire story must be COMPLETE — never stop mid-sentence or mid-paragraph.
+- Entire story must be complete within ~2000 tokens.
 - Plan beginning, middle, and ending before writing.
 - Reserve at least 15% of length for the ending.
+- NEVER stop mid-sentence or mid-paragraph.
 - If the story grows long, compress the middle — NEVER truncate the ending.
+- And don't mention these aboove points in the story. just directly write the story
 
 STORY RULES:
 - Write a single, self-contained story.
@@ -90,23 +89,25 @@ STORY RULES:
   3) Resolution
 - End with a strong, definitive final paragraph.
 - Do NOT ask to continue. Do NOT split into parts.
-- Always include a creative title on the first line formatted as: Title: <title>
 
 Tone: immersive, vivid, cinematic.
-Length target: ~700–1000 words.
+Length target: ~1200-1500 tokens.
 
-Now write the complete story from start to finish.
+Now directly write the story.
+
 """
+
 
 DATASET_PROMPT = """
 You are The Dataset Oracle. Provide structured insights: summary, patterns,
 correlations, anomalies, recommendations, and forecasts.
 """
 
+
 chat_history = {
-    "poet":   [],
-    "coder":  [],
-    "story":  []
+    "poet": [],
+    "coder": [],
+    "story": []
 }
 
 _chart_store = {}
@@ -114,19 +115,21 @@ _global_data_store = {"df": None, "eda": None, "name": None}
 
 
 
-def fireworks_chat(model, messages, temperature=0.5, max_tokens=2500):
+def fireworks_chat(model, messages, temperature=0.5, max_tokens=1500):
     headers = {
         "Authorization": f"Bearer {FIREWORKS_API_KEY}",
         "Content-Type": "application/json"
     }
+
     payload = {
         "model": model,
         "messages": messages,
         "temperature": temperature,
         "max_tokens": max_tokens
     }
+
     try:
-        res = requests.post(FIREWORKS_URL, headers=headers, json=payload, timeout=90)
+        res = requests.post(FIREWORKS_URL, headers=headers, json=payload, timeout=60)
         res.raise_for_status()
         msg = res.json()["choices"][0]["message"]
         return (msg.get("content") or msg.get("reasoning_content") or "").strip()
@@ -143,37 +146,35 @@ def fireworks_chat(model, messages, temperature=0.5, max_tokens=2500):
 
 def process_chat(user_prompt, key, persona_prompt):
     history = chat_history[key]
+
     messages = [{"role": "system", "content": persona_prompt}]
 
+    # inject memory
     for i in range(0, len(history), 2):
         try:
-            messages.append({"role": "user",      "content": history[i]})
-            messages.append({"role": "assistant",  "content": history[i + 1]})
+            messages.append({"role": "user", "content": history[i]})
+            messages.append({"role": "assistant", "content": history[i+1]})
         except IndexError:
             pass
 
     messages.append({"role": "user", "content": user_prompt})
 
-    # FIX 2: higher max_tokens for story, normal for others
-    max_tok = 2500 if key == "story" else 1500
     output = fireworks_chat(
         model=MODELS[key],
         messages=messages,
-        temperature=0.7 if key in ("story", "poet") else 0.2,
-        max_tokens=max_tok
+        temperature=0.2
     )
 
     history.extend([user_prompt, output])
-    chat_history[key] = history[-12:]
+    chat_history[key] = history[-12:] 
     return output
-
 
 
 def read_uploaded_file_storage(file_storage):
     content = file_storage.read()
     try:
         return content.decode("utf-8")
-    except Exception:
+    except:
         return content.decode("latin-1", errors="ignore")
 
 
@@ -181,22 +182,26 @@ def parse_dataset_text(text):
     from io import StringIO
     t = text.strip()
 
+ 
     try:
         if t.startswith("{") or t.startswith("["):
             return pd.read_json(StringIO(t))
     except Exception:
         pass
 
+    
     try:
         return pd.read_csv(StringIO(t))
     except Exception:
         pass
 
+ 
     try:
         return pd.read_csv(StringIO(t), sep="\t")
     except Exception:
         pass
 
+   
     return pd.DataFrame({"text": t.splitlines()})
 
 
@@ -206,9 +211,11 @@ def compute_eda(df):
     eda["columns_list"] = df.columns.tolist()
     eda["missing_values"] = df.isnull().sum().to_dict()
     eda["types"] = {c: str(df[c].dtype) for c in df.columns}
+    
 
     try:
         eda["summary"] = df.describe(include="all", datetime_is_numeric=True).to_dict()
+        
     except Exception:
         eda["summary"] = {}
 
@@ -218,6 +225,7 @@ def compute_eda(df):
     else:
         eda["correlation"] = {}
 
+    
     outliers = {}
     for c in num_cols:
         s = df[c].dropna()
@@ -235,8 +243,9 @@ def compute_eda(df):
 
 def compute_advanced_eda(df):
     analysis = {}
+
     num_cols = df.select_dtypes(include=[np.number]).columns.tolist()
-    cat_cols = df.select_dtypes(include=["object", "category"]).columns.tolist()
+    cat_cols = df.select_dtypes(include=['object', 'category']).columns.tolist()
 
     distribution = []
     for col in num_cols:
@@ -266,7 +275,9 @@ def compute_advanced_eda(df):
             "fix": fix,
             "count_non_null": int(s.shape[0])
         })
+
     analysis["distribution_summary"] = distribution
+    
 
     categorical_summary = []
     for col in cat_cols:
@@ -282,8 +293,10 @@ def compute_advanced_eda(df):
             "rare_labels": rare,
             "cardinality": int(col_series.nunique())
         })
+
     analysis["categorical_summary"] = categorical_summary
 
+   
     corrs = []
     if len(num_cols) >= 2:
         corr_matrix = df[num_cols].corr().abs()
@@ -299,6 +312,7 @@ def compute_advanced_eda(df):
         corrs = sorted(corrs, key=lambda x: x["value"], reverse=True)[:15]
     analysis["correlation_top"] = corrs
 
+   
     flags = []
     dup = int(df.duplicated().sum())
     if dup > 0:
@@ -307,55 +321,36 @@ def compute_advanced_eda(df):
     for col in df.columns:
         if df[col].dtype == object:
             try:
-                is_mixed_numeric = df[col].apply(
-                    lambda x: str(x).replace(".", "", 1).isdigit()
-                ).sum()
+                is_mixed_numeric = df[col].apply(lambda x: str(x).replace('.', '', 1).isdigit()).sum()
                 if is_mixed_numeric > len(df) * 0.6:
-                    flags.append(
-                        f"Column '{col}' contains many numeric-looking strings "
-                        f"(mixed types). Consider coercing to numeric."
-                    )
+                    flags.append(f"Column '{col}' contains many numeric-looking strings (mixed types). Consider coercing to numeric.")
             except Exception:
                 pass
 
     for col in df.columns:
         if df[col].nunique(dropna=False) <= 1:
-            flags.append(
-                f"Column '{col}' is constant (single unique value). "
-                f"Consider dropping it."
-            )
+            flags.append(f"Column '{col}' is constant (single unique value). Consider dropping it.")
+
     analysis["quality_flags"] = flags
 
+    
     rec = []
-    if cat_cols:
-        rec.append(
-            "Apply One Hot Encoding or target encoding for categorical variables "
-            "(watch high-cardinality columns)."
-        )
-    if num_cols:
-        rec.append(
-            "Standardize or normalize numerical columns "
-            "(e.g., StandardScaler or RobustScaler)."
-        )
-    rec.append(
-        "Consider removing or capping extreme outliers, or use robust models "
-        "(e.g., tree-based or robust regression)."
-    )
-    high_missing = [
-        c for c, v in df.isnull().mean().to_dict().items() if v > 0.4
-    ]
+    if len(cat_cols) > 0:
+        rec.append("Apply One Hot Encoding or target encoding for categorical variables (watch high-cardinality columns).")
+    if len(num_cols) > 0:
+        rec.append("Standardize or normalize numerical columns (e.g., StandardScaler or RobustScaler).")
+    rec.append("Consider removing or capping extreme outliers, or use robust models (e.g., tree-based or robust regression).")
+
+    high_missing = [c for c, v in df.isnull().mean().to_dict().items() if v > 0.4]
     if high_missing:
-        rec.append(
-            f"Drop or impute columns with >40% missing values: "
-            f"{', '.join(high_missing)}"
-        )
+        rec.append(f"Drop or impute columns with >40% missing values: {', '.join(high_missing)}")
+
     if flags:
-        rec.append(
-            "Resolve data quality flags before model training "
-            "(duplicates, mixed types, constant cols)."
-        )
+        rec.append("Resolve data quality flags before model training (duplicates, mixed types, constant cols).")
+
     analysis["ml_recommendations"] = rec
     _global_data_store["analysis"] = analysis
+
     return analysis
 
 
@@ -364,7 +359,7 @@ def auto_clean_dataframe(df):
     for col in df.columns:
         if df[col].dtype == object:
             coerced = pd.to_numeric(df[col], errors="coerce")
-            if coerced.notna().sum() > len(df) * 0.6:
+            if coerced.notna().sum() > len(df)*0.6:
                 df[col] = coerced
 
         if pd.api.types.is_numeric_dtype(df[col]):
@@ -372,7 +367,7 @@ def auto_clean_dataframe(df):
         else:
             try:
                 df[col] = df[col].fillna(df[col].mode()[0])
-            except Exception:
+            except:
                 df[col] = df[col].fillna("")
     return df
 
@@ -388,16 +383,18 @@ def fig_to_b64(fig):
 
 def save_fig(fig):
     b64 = fig_to_b64(fig)
-    cid = f"chart_{len(_chart_store) + 1}"
+    cid = f"chart_{len(_chart_store)+1}"
     _chart_store[cid] = base64.b64decode(b64)
     return cid, b64
+
 
 
 def generate_charts(df):
     charts = []
     num = df.select_dtypes(include=[np.number]).columns.tolist()
-    cat = df.select_dtypes(include=["object", "category"]).columns.tolist()
+    cat = df.select_dtypes(include=['object', 'category']).columns.tolist()
 
+   
     for c in num[:5]:
         try:
             fig, ax = plt.subplots()
@@ -408,6 +405,7 @@ def generate_charts(df):
         except Exception:
             pass
 
+    
     if len(num) >= 2:
         try:
             fig, ax = plt.subplots(figsize=(6, 5))
@@ -418,7 +416,8 @@ def generate_charts(df):
         except Exception:
             pass
 
-    if cat:
+    
+    if len(cat) >= 1:
         try:
             c0 = cat[0]
             fig, ax = plt.subplots(figsize=(6, 4))
@@ -434,9 +433,6 @@ def generate_charts(df):
 
 
 
-@app.route("/ping")
-def ping():
-    return {"status": "ok"}
 
 
 @app.route("/analyze", methods=["POST"])
@@ -453,16 +449,21 @@ def analyze_endpoint():
             df = parse_dataset_text(txt)
             name = "dataset"
 
+        
         df_clean = auto_clean_dataframe(df)
+
+       
         eda = compute_eda(df_clean)
         advanced = compute_advanced_eda(df_clean)
         eda.update(advanced)
+
+        # Charts
         charts = generate_charts(df_clean)
 
         _global_data_store["name"] = name
         _global_data_store["df"] = df_clean
         _global_data_store["eda"] = eda
-        _global_data_store["insights"] = None
+        _global_data_store["insights"] = None 
 
         return jsonify({
             "success": True,
@@ -474,6 +475,8 @@ def analyze_endpoint():
     except Exception as e:
         traceback.print_exc()
         return jsonify({"success": False, "error": str(e)})
+
+
 
 
 @app.route("/chat-with-data", methods=["POST"])
@@ -502,6 +505,7 @@ def chat_with_data():
             "Answer briefly using only the provided context. "
             "Do NOT hallucinate missing info."
         )
+
         user_prompt = (
             f"Context: {json.dumps(minimal_context)}\n"
             f"User question: {q}\n"
@@ -513,30 +517,26 @@ def chat_with_data():
                 "model": MODELS["analyzer"],
                 "messages": [
                     {"role": "system", "content": system_prompt},
-                    {"role": "user",   "content": user_prompt}
+                    {"role": "user", "content": user_prompt}
                 ],
                 "temperature": 0.0,
-                "max_tokens": 400,
+                "max_tokens": 300,
                 "stream": False
             }
+
             headers = {
                 "Content-Type": "application/json",
                 "Accept": "application/json",
                 "Authorization": f"Bearer {FIREWORKS_API_KEY}"
             }
+
             resp = requests.post(FIREWORKS_URL, headers=headers, json=payload, timeout=30)
             resp.raise_for_status()
             jr = resp.json()
-            answer = (
-                jr.get("choices", [{}])[0]
-                  .get("message", {})
-                  .get("content", "[ERROR] no content")
-            )
+            answer = jr.get("choices", [{}])[0].get("message", {}).get("content", "[ERROR] no content")
+
         except Exception as e:
-            answer = (
-                f"[MODEL ERROR] {str(e)}. You can still inspect correlations, "
-                "summary stats, and distributions in the EDA report."
-            )
+            answer = f"[MODEL ERROR] {str(e)}. You can still inspect correlations, summary stats, and distributions in the EDA report."
 
         return jsonify({"success": True, "response": answer})
 
@@ -545,18 +545,18 @@ def chat_with_data():
         return jsonify({"success": False, "error": str(e)}), 500
 
 
+
+
 @app.route("/download-chart/<cid>", methods=["GET"])
 def download_chart(cid):
     if cid not in _chart_store:
         return jsonify({"error": "Chart not found"}), 404
     buf = io.BytesIO(_chart_store[cid])
     buf.seek(0)
-    return send_file(
-        buf,
-        mimetype="image/png",
-        as_attachment=True,
-        download_name=f"{cid}.png"
-    )
+    return send_file(buf, mimetype="image/png", as_attachment=True, download_name=f"{cid}.png")
+
+
+
 
 
 @app.route("/export-pdf", methods=["POST"])
@@ -572,8 +572,10 @@ def export_pdf():
         pdf.add_page()
         pdf.set_font("Arial", "B", 16)
         pdf.cell(0, 10, title, ln=True)
+
         pdf.set_font("Arial", "", 11)
         pdf.multi_cell(0, 6, insights)
+
         pdf.set_font("Arial", "B", 12)
         pdf.cell(0, 8, "EDA Summary:", ln=True)
         pdf.set_font("Arial", "", 10)
@@ -588,69 +590,44 @@ def export_pdf():
                 pdf.image(fname, x=10, y=10, w=180)
                 os.remove(fname)
 
-        out = io.BytesIO(pdf.output(dest="S").encode("latin-1"))
+        out = io.BytesIO(pdf.output(dest='S').encode('latin-1'))
         out.seek(0)
-        return send_file(
-            out,
-            mimetype="application/pdf",
-            as_attachment=True,
-            download_name=f"dataset_report_{int(datetime.now().timestamp())}.pdf"
-        )
+
+        return send_file(out, mimetype="application/pdf", as_attachment=True,
+                         download_name=f"dataset_report_{int(datetime.now().timestamp())}.pdf")
 
     except Exception as e:
         traceback.print_exc()
         return jsonify({"error": str(e)})
-
+    
 
 
 @app.route("/story-weaver", methods=["POST"])
 def story_weaver():
-    """
-    Primary story endpoint used by the frontend action buttons.
-    action values: continue_story | write_script | add_character |
-                   plot_outline   | alt_directions
-    """
     data = request.json or {}
     action = data.get("action", "continue_story")
-    story  = data.get("story", "")
+    story = data.get("story", "")
     prompt = data.get("prompt", "")
 
     if action == "write_script":
-        instruction = (
-            f"Convert the following story into a properly formatted screenplay. "
-            f"Include scene headings, action lines, and dialogue:\n\n{story}\n\n{prompt}"
-        )
+        instruction = f"Convert to screenplay:\n\n{story}\n\n{prompt}"
     elif action == "add_character":
-        instruction = (
-            f"Introduce a compelling new character into this story and rewrite "
-            f"the relevant sections to weave them in naturally:\n\n{story}\n\n{prompt}"
-        )
+        instruction = f"Add a new character and rewrite:\n\n{story}\n\n{prompt}"
     elif action == "plot_outline":
-        instruction = (
-            f"Create a detailed three-act plot outline for this story, with "
-            f"key turning points, character arcs, and scene ideas:\n\n{story}\n\n{prompt}"
-        )
+        instruction = f"Create a plot outline:\n\n{story}\n\n{prompt}"
     elif action == "alt_directions":
-        instruction = (
-            f"Generate three distinct alternative directions this story could "
-            f"take from its current point, each with a different tone or genre "
-            f"twist:\n\n{story}\n\n{prompt}"
-        )
+        instruction = f"Generate alternate story paths:\n\n{story}\n\n{prompt}"
     else:
-        # Default: start new story or continue existing one
-        if story.strip():
-            instruction = f"Continue this story, keeping the same tone and style:\n\n{story}\n\n{prompt}"
-        else:
-            instruction = prompt or "Write a compelling story."
+        instruction = f"Continue the story:\n\n{story}\n\n{prompt}"
 
     out = fireworks_chat(
         model=MODELS["story"],
         messages=[
             {"role": "system", "content": STORY_PROMPT},
-            {"role": "user",   "content": instruction}
+            {"role": "user", "content": instruction}
         ],
-        temperature=0.75,
-        max_tokens=2500   # FIX 2: was 1500 — now allows full stories
+        temperature=0.4,
+        max_tokens=1500
     )
 
     return jsonify({
@@ -664,24 +641,30 @@ def story_weaver():
 
 @app.route("/poet_chat", methods=["POST"])
 def poet_chat():
-    text = (request.json or {}).get("prompt", "")
+    text = request.json.get("prompt", "")
     out = process_chat(text, "poet", POET_PROMPT)
     return jsonify({"response": out, "confidence": "95%"})
 
-
 @app.route("/code_chat", methods=["POST"])
 def code_chat():
-    text = (request.json or {}).get("prompt", "")
+    text = request.json.get("prompt", "")
     out = process_chat(text, "coder", CODE_PROMPT)
     return jsonify({"response": out, "confidence": "98%"})
 
-
 @app.route("/story_weaver_chat", methods=["POST"])
 def story_chat():
-    text = (request.json or {}).get("prompt", "")
+    text = request.json.get("prompt", "")
     out = process_chat(text, "story", STORY_PROMPT)
     return jsonify({"response": out, "confidence": "95%"})
 
+
+# if __name__ == "__main__":
+#     print("Server running at http://127.0.0.1:5000")
+#     app.run(debug=True)
+
+@app.route("/ping")
+def ping():
+    return {"status": "ok"}
 
 
 if __name__ == "__main__":
