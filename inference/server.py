@@ -36,13 +36,13 @@ if not FIREWORKS_API_KEY:
 
 
 MODELS = {
-    "poet": "accounts/fireworks/models/deepseek-v4-flash",
-    "coder": "accounts/fireworks/models/deepseek-v4-flash",
-    "story": "accounts/fireworks/models/deepseek-v4-flash",
-    "analyzer": "accounts/fireworks/models/deepseek-v4-flash"
+    "poet": "accounts/fireworks/models/deepseek-v4-flash-0731",
+    "coder": "accounts/fireworks/models/deepseek-v4-flash-0731",
+    "story": "accounts/fireworks/models/deepseek-v4-flash-0731",
+    "analyzer": "accounts/fireworks/models/deepseek-v4-flash-0731"
 }
 
-print("[OK] Fireworks Model Routing Initialized (deepseek-v4-flash)")
+print("[OK] Fireworks Model Routing Initialized (deepseek-v4-flash-0731)")
 
 
 POET_PROMPT = "You are The Poet. Respond ONLY in expressive poetry."
